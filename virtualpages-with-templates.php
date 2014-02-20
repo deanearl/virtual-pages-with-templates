@@ -30,6 +30,7 @@ if (!class_exists('VirtualPagesTemplates'))
 
         const ERR_URL = 1;
         const ERR_TEMPLATE = 2;
+        const ERR_CATEGORY = 3;
 
 		public function __construct() 
 		{	
@@ -122,7 +123,7 @@ if (!class_exists('VirtualPagesTemplates'))
 			if(isset($_POST['vpt_hidden']) && $_POST['vpt_hidden'] == 'Y') {  
 				unset($_POST['vpt_hidden']);
 				unset($_POST['submit']);
-
+			
 				$extra = '';
 				
 				if (isset($_POST['use_custom_permalink_structure']) && empty($_POST['virtualpageurl']))
@@ -132,6 +133,10 @@ if (!class_exists('VirtualPagesTemplates'))
 				elseif (!isset($_POST['page_template']))
 				{
 					$extra = '&error=' . self::ERR_TEMPLATE ;
+				}
+				elseif ($_POST['use_custom_permalink_structure'] && strpos($_POST['virtualpageurl'],'%category%') !== false && get_post($_POST['page_template'])->post_type == 'page')
+				{
+					$extra = '&error=' . self::ERR_CATEGORY ;
 				}
 				else
 				{
@@ -174,6 +179,10 @@ if (!class_exists('VirtualPagesTemplates'))
 					break;
 				case self::ERR_TEMPLATE:
 					$this->notice = 'Page template is required. You can make a template by creating a <a href="'.admin_url('post-new.php').'">post</a> or a <a href="'.admin_url('post-new.php?post_type=page').'">page</a> as save it as draft.';
+					break;
+				case self::ERR_CATEGORY:
+					$this->notice = 'The `%category%` tag will not work on pages.';
+					break;					
 				default:
 					# code...
 					break;
