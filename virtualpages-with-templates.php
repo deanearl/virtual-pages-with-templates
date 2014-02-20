@@ -26,6 +26,7 @@ if (!class_exists('VirtualPagesTemplates'))
         public $notice = NULL;
         public $notice_iserror = FALSE;
         public $menu_slug = NULL;
+        public $category_slug = NULL;
 
         const ERR_URL = 1;
         const ERR_TEMPLATE = 2;
@@ -78,8 +79,11 @@ if (!class_exists('VirtualPagesTemplates'))
 	        		$structure = $this->options['virtualpageurl'];
 		        }
 
-	        	if (strpos($structure, '%postname%'))
-	        		wp_redirect( str_replace('%postname%', $wp_query->query['s'] , $structure) );
+	        	if (strpos($structure, '%postname%')){
+	        		$structure = str_replace('%postname%', $wp_query->query['s'] , $structure) ;
+	        		$structure = str_replace('%category%', $this->category_slug , $structure) ;
+	        		wp_redirect( $structure );
+	        	}
 		        }
 		    }
 		}
@@ -192,9 +196,10 @@ if (!class_exists('VirtualPagesTemplates'))
             }
             else
             {
-            	$needles = array('%postname%');
+            	$needles = array('%postname%', '%category%');
             	$replacements_regex = array(
                 	'(?<postname>[^/]+)',
+                	'(?<category>[^/]+)'
             	);
             	$regex = str_replace($needles, $replacements_regex, $virtualpageurl_trimmed);
             	$regex = str_replace('/', "\/", $regex);
@@ -238,13 +243,15 @@ if (!class_exists('VirtualPagesTemplates'))
             $this->init_keyword($current_url_trimmed, $virtualpageurl_trimmed);
             $virtual_url = str_replace('%postname%', $this->keyword, $virtualpageurl_trimmed);
 
+            // get the template details
+            $this->template_content = $this->get_template_content();
+            $virtual_url = str_replace('%category%', $this->category_slug, $virtual_url);
+
             if ($virtual_url == $current_url_trimmed && (count($wp_query->posts) == 0 || (isset($wp_query->query['error']) && $wp_query->query['error'] == '404')) ) 
             {
             	if (isset($this->options['page_template']))
             	{
             	$this->keyword = str_replace('-', ' ', $this->keyword);
-            	// get the template details
-            	$this->template_content = $this->get_template_content();
 
             	//create a fake page
                 $post = new stdClass;
@@ -334,9 +341,21 @@ if (!class_exists('VirtualPagesTemplates'))
 		{
 			global $wp,$wp_query;
 
-			$this->template = get_post($this->options['page_template']);      
+			if (isset($this->options['page_template']))
+			{
+				$this->template = get_post($this->options['page_template']);      
 			
-			$this->template_content = str_replace('%vpt-keyword%', $this->keyword, $this->template->post_content);
+				$this->template_content = str_replace('%vpt-keyword%', $this->keyword, $this->template->post_content);
+
+				$categories = get_the_category($this->template->ID);
+				$category = current($categories);
+
+				if (!is_null($category) && is_object($category))
+	            {
+	            	$this->category_slug = $category->slug;
+	            }
+
+			}
 
 			return $this->template_content;
 		}
