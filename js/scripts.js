@@ -39,8 +39,20 @@ var Vpt = {
 			passed = false;
 		}else{
 			jQuery('.no-template-message ').hide();	
-	}
 
+		var post_type = jQuery('#page_template :selected').parent().attr('label').toLowerCase();
+		if (jQuery('#use_custom_permalink_structure').is(':checked') && post_type == 'pages'){
+			has_category = jQuery('#virtualpageurl').val().match(/%category%/);
+			if (has_category)
+			{
+				jQuery('#message').remove();
+				jQuery('.has-category-error').show();
+				passed = false;
+			}
+		}else
+			jQuery('.has-category-error').hide();
+
+	}
 		return passed;
 }
 

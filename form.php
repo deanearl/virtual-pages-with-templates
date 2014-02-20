@@ -41,6 +41,14 @@
             </strong>
         </p>
     </div>
+
+    <div class="error has-category-error hidden">
+        <p>
+            <strong>
+                The `%category%` tag will not work on pages.
+            </strong>
+        </p>
+    </div>
     
     <form id="vpt_form" method="post" action="<?php echo str_replace( '%7E', '~', $_SERVER['REQUEST_URI']); ?>" class="validate">
         <input type="hidden" name="vpt_hidden" value="Y"/>  
