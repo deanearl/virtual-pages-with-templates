@@ -27,6 +27,7 @@ if (!class_exists('VirtualPagesTemplates'))
         public $notice_iserror = FALSE;
         public $menu_slug = NULL;
         public $category_slug = NULL;
+        public $hide_post_id = FALSE;
         private $is_virtual_page = FALSE;
 
         const ERR_URL = 1;
@@ -48,6 +49,10 @@ if (!class_exists('VirtualPagesTemplates'))
 
 				add_filter('body_class', array($this, 'vpt_body_class'), 20, 2);
 				add_filter('post_class', array($this, 'vpt_post_class'), 20, 2);
+
+
+				add_action('wp_head', array($this,'buffer_start'));
+				add_action('wp_footer', array($this,'buffer_end'));
 			}else{
 				add_action( 'admin_menu', array($this, 'display_menu') );
 				register_uninstall_hook(__FILE__, array('VirtualPagesTemplates','vpt_uninstall_plugin'));
@@ -114,8 +119,8 @@ if (!class_exists('VirtualPagesTemplates'))
 		*/
 	  	public function vpt_body_class($wp_classes)
 	  	{
-	  		if ($this->is_virtual_page())
-	  		{
+	  		if ($this->is_virtual_page() && $this->hide_post_id)
+	  		{	
 	  			foreach ($wp_classes as $k => $v)
 	  			{
 	  				if ($GLOBALS['post']->post_type == 'page')
@@ -135,7 +140,7 @@ if (!class_exists('VirtualPagesTemplates'))
 	  	public function vpt_post_class($wp_classes)
 	  	{
 	  		
-	  		if ($this->is_virtual_page())
+	  		if ($this->is_virtual_page() && $this->hide_post_id)
 	  		{
 	  			foreach ($wp_classes as $k => $v)
 	  			{
@@ -242,6 +247,7 @@ if (!class_exists('VirtualPagesTemplates'))
 				{
 				$_POST['use_custom_permalink_structure'] = isset($_POST['use_custom_permalink_structure']) ? $_POST['use_custom_permalink_structure'] : '0';
 				$_POST['affect_search'] = isset($_POST['affect_search']) ? $_POST['affect_search'] : '0';
+				$_POST['hide_post_id'] = isset($_POST['hide_post_id']) ? $_POST['hide_post_id'] : '0';
 				update_option('vpt_options', $_POST);
 					$extra = '&settings-updated=true';
 				}
@@ -339,6 +345,10 @@ if (!class_exists('VirtualPagesTemplates'))
             if (!isset($this->options['use_custom_permalink_structure']))
             	$this->options['use_custom_permalink_structure'] = 0;
             $this->use_custom_permalink = (BOOL) $this->options['use_custom_permalink_structure'];
+
+            if (!isset($this->options['hide_post_id']))
+            	$this->options['hide_post_id'] = 0;
+            $this->hide_post_id = (BOOL) $this->options['hide_post_id'];
 
             if (!$this->use_custom_permalink)
 				$virtualpageurl = $this->permalink_structure;
@@ -469,6 +479,45 @@ if (!class_exists('VirtualPagesTemplates'))
 
 			return $this->template_content;
 		}
+
+		/**
+		* start buffer to get the html content and remove the `id` attribute in the <article/> tag if virtual page
+		*
+		* @access public 
+		* @return void
+		*/
+		public function buffer_start() 
+		{ 
+			if ($this->is_virtual_page() && $this->hide_post_id)
+				ob_start(array($this,'remove_article_id')); 
+		}
+
+		/**
+		* end the buffer / flush
+		*
+		* @access public 
+		* @return void
+		*/
+		public function buffer_end() 
+		{ 
+			if ($this->is_virtual_page() && $this->hide_post_id)
+				ob_end_flush(); 
+		}
+
+		/**
+		* remove the `id` attribute in the <article/> tag if virtual page
+		*
+		* @access public 
+		* @param html $buffer
+		* @return html $buffer
+		*/
+		public function remove_article_id($buffer) 
+		{
+			// modify buffer here, and then return the updated code
+			if ($this->is_virtual_page() && $this->hide_post_id)
+				return (str_replace('<article id="post-' . $this->template->ID.'"', '<article', $buffer));	
+			else return $buffer;
+  		}
 
 		/**
 		 * Include required admin files.
