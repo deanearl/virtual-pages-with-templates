@@ -47,7 +47,7 @@ if (!class_exists('VirtualPagesTemplates'))
 				add_action('wp_head', array($this, 'vpt_shortlink_wp_head'), 10, 0); // custom shortlink
 
 				add_filter('body_class', array($this, 'vpt_body_class'), 20, 2);
-				
+				add_filter('post_class', array($this, 'vpt_post_class'), 20, 2);
 			}else{
 				add_action( 'admin_menu', array($this, 'display_menu') );
 				register_uninstall_hook(__FILE__, array('VirtualPagesTemplates','vpt_uninstall_plugin'));
@@ -132,6 +132,20 @@ if (!class_exists('VirtualPagesTemplates'))
 	  		return $wp_classes;
 	  	}
 	  	
+	  	public function vpt_post_class($wp_classes)
+	  	{
+	  		
+	  		if ($this->is_virtual_page())
+	  		{
+	  			foreach ($wp_classes as $k => $v)
+	  			{
+
+	  				if ($v == 'post-' . $GLOBALS['post']->ID) unset($wp_classes[$k]);
+	  			}
+	  		}
+
+	  		return $wp_classes;
+	  	}
 	  	/**
 		* vpt_uninstall_plugin
 		* 
