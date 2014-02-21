@@ -13,6 +13,7 @@ class WP_Test_Vpt extends WP_UnitTestCase
  	private $keyword_tag = '%vpt-keyword%';
 
  	private $test_vpt_keyword = 'this is a test keyword';
+ 	private $test_vpt_category_slug = 'some-category';
 
 	/* Set and initiate the plugins here */
  	function setUp() 
@@ -195,17 +196,19 @@ class WP_Test_Vpt extends WP_UnitTestCase
  	{
  		$kw_url = $this->test_vpt_keyword;
  		// test urls
- 		$test_wp_urls = array('/'.$kw_url, '/shop/'.$kw_url, '/keyword/'.$kw_url, '/keyword/'.$kw_url.'/testing');
- 		$test_virtual_urls = array('/%postname%', '/shop/%postname%', '/keyword/%postname%/testing');
- 		$test_wp_permalinks = array('/%postname%', '/abc/%postname%');
+ 		$test_wp_urls = array('/'.$kw_url, '/shop/'.$kw_url, '/keyword/'.$kw_url, '/keyword/'.$kw_url.'/testing', '/'.$kw_url.'/'.$this->test_vpt_category_slug.'/');
+ 		$test_virtual_urls = array('/%postname%', '/shop/%postname%', '/keyword/%postname%/testing', '/%postname%/%category%/');
+ 		$test_wp_permalinks = array('/%postname%', '/abc/%postname%/', '/%postname%/%category%/', '/abc/%postname%/%category%/');
 
  		// init
  		$this->vpt->keyword = $kw_url;
  		$test_content = 'a test content with keyword - `'. $this->keyword_tag .'`';
 		$id = $this->factory->post->create(array('post_title' => 'a test title', 'post_content' => ''));
 
+		$category = $this->factory->category->create_and_get(array('slug' => $this->test_vpt_category_slug, 'name' => 'some category'));
+		wp_set_post_categories( $id, array($category->term_id) ) ;
+		
  		$this->update_vpt_option(TRUE, '/shop/%postname%/', $id, 'post');
-
  		
  		// use custom permalink
  		$this->start_asserting($test_virtual_urls, $test_wp_urls, $id );
@@ -223,17 +226,19 @@ class WP_Test_Vpt extends WP_UnitTestCase
  				$_SERVER['REQUEST_URI'] = $url;
 
  				$permalink_converted = str_replace('%postname%', $this->test_vpt_keyword, $permalink);
+ 				$permalink_converted = str_replace('%category%', $this->test_vpt_category_slug, $permalink_converted);
 
  				$this->update_vpt_option(TRUE, $permalink, $post_id, 'post');
+ 				
  				if ($permalink_converted == $url)
- 				{
+ 				{	
  					// redirect to a virtual post / page
  					$this->assertNotEmpty( $this->vpt->create_virtual(array()), $permalink_converted . ' ' . $url );	
  				}
  				else
  				{
  					// redirect to normal post / page
- 					$this->assertEmpty( $this->vpt->create_virtual(array()), $permalink_converted . ' ' . $url );	
+ 					$this->assertEmpty( $this->vpt->create_virtual(array()), $permalink_converted . ' ' . $url, $permalink_converted . ' ' . $url );	
  				}
  			}
  		} 
@@ -274,12 +279,12 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		$wp_query->queried_object = $post;
  		$expected_shortlink = "<link rel='shortlink' href='" . esc_url( $post->guid ) . "' />\n";
 
+ 		$this->vpt->set_is_virtual_page(FALSE);
  		$shortlink_value = $this->get_vpt_shortlink_wp_head();
-
  		$this->assertEquals($expected_shortlink, $shortlink_value);
 
  		// test to not to show shortlinks if the page is a virtual page
- 		$this->vpt->template = TRUE;
+ 		$this->vpt->set_is_virtual_page(TRUE);
  		$shortlink_value = $this->get_vpt_shortlink_wp_head();
  		$this->assertEmpty($shortlink_value);
 
@@ -323,7 +328,7 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		$wp_query->is_singular = TRUE;
 
  		// test to show the canonical tag based on the permalink structure
- 		$this->vpt->template = NULL;
+ 		$this->vpt->set_is_virtual_page(FALSE);
  		update_option('permalink_structure' , '/%postname%/');
  		$wp_rewrite->page_structure = '%pagename%';
 
@@ -339,7 +344,7 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		$this->assertEquals($expected_canonical, $canonical_link);
 
  		// test to show the canonical tag for virtual pages
- 		$this->vpt->template = TRUE;
+ 		$this->vpt->set_is_virtual_page(TRUE);
 
  		$this->vpt->keyword = $this->test_vpt_keyword;
  		$this->vpt->options = array('page_template' => $post->ID);
@@ -389,14 +394,16 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		$wp_classes_post = array('single', 'single-post', 'postid-' . $GLOBALS['post']->ID, 'single-format-standard', 'masthead-fixed', 'full-width', 'singular');
 
  		// normal post - body class should be existing
+ 		$this->vpt->set_is_virtual_page(FALSE);
  		$this->assertTrue(in_array('postid-' . $GLOBALS['post']->ID, $this->vpt->vpt_body_class($wp_classes_post)));
 
  		// virtual page - body class should not be existing
- 		$this->vpt->template = TRUE;
+ 		
+ 		$this->vpt->set_is_virtual_page(TRUE);
  		$this->assertFalse(in_array('postid-' . $GLOBALS['post']->ID, $this->vpt->vpt_body_class($wp_classes_post)));
 
  		// PAGE
- 		$this->vpt->template = NULL;
+ 		$this->vpt->set_is_virtual_page(FALSE);
  		$GLOBALS['post'] = $this->factory->post->create_and_get( array('post_type' => 'page') );
  		$wp_classes_page = array('page', 'page-id-' . $GLOBALS['post']->ID, 'page-template-default', 'masthead-fixed', 'full-width', 'singular');
 	 		
@@ -404,7 +411,7 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		$this->assertTrue(in_array('page-id-' . $GLOBALS['post']->ID, $this->vpt->vpt_body_class($wp_classes_page)));
 
  		// virtual page - body class should not be existing
- 		$this->vpt->template = TRUE;
+ 		$this->vpt->set_is_virtual_page(TRUE);
  		$this->assertFalse(in_array('page-id-' . $GLOBALS['post']->ID, $this->vpt->vpt_body_class($wp_classes_page)));
  	}
 

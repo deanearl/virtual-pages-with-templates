@@ -27,6 +27,7 @@ if (!class_exists('VirtualPagesTemplates'))
         public $notice_iserror = FALSE;
         public $menu_slug = NULL;
         public $category_slug = NULL;
+        private $is_virtual_page = FALSE;
 
         const ERR_URL = 1;
         const ERR_TEMPLATE = 2;
@@ -70,7 +71,7 @@ if (!class_exists('VirtualPagesTemplates'))
 				return;
 
 
-			if (!is_null($this->template) && $id == $this->template->ID)
+			if ($this->is_virtual_page() && $id == $this->template->ID)
 			{
 				global $wp_rewrite;
 				$link = $wp_rewrite->get_page_permastruct();
@@ -96,7 +97,7 @@ if (!class_exists('VirtualPagesTemplates'))
 		 */
 	  	public function vpt_shortlink_wp_head()
 	  	{
-	  		if (is_null($this->template))
+	  		if (!$this->is_virtual_page())
 	  		{
 	  			$shortlink = wp_get_shortlink( 0, 'query' );
 
@@ -113,7 +114,7 @@ if (!class_exists('VirtualPagesTemplates'))
 		*/
 	  	public function vpt_body_class($wp_classes)
 	  	{
-	  		if (!is_null($this->template))
+	  		if ($this->is_virtual_page())
 	  		{
 	  			foreach ($wp_classes as $k => $v)
 	  			{
@@ -157,7 +158,7 @@ if (!class_exists('VirtualPagesTemplates'))
 
 		        if ($this->options['affect_search'] )
 		        {
-		        	if (count($wp_query->posts) == 0  || !is_null($this->template) && $wp_query->post->ID == $this->template->ID)
+		        	if (count($wp_query->posts) == 0  || !is_null($this->is_virtual_page()) && $wp_query->post->ID == $this->template->ID)
 		        	{
 		        		$structure = $this->permalink_structure;
 			        	if ($this->use_custom_permalink){
@@ -340,70 +341,70 @@ if (!class_exists('VirtualPagesTemplates'))
             // get the template details
             $this->template_content = $this->get_template_content();
             $virtual_url = str_replace('%category%', $this->category_slug, $virtual_url);
-
+            
             if ($virtual_url == $current_url_trimmed && (count($wp_query->posts) == 0 || (isset($wp_query->query['error']) && $wp_query->query['error'] == '404')) ) 
             {
-            	if (isset($this->options['page_template']))
+            	if (!is_null($this->template))
             	{
-            	$this->keyword = str_replace('-', ' ', $this->keyword);
+            		$this->set_is_virtual_page( TRUE );
 
-            	//create a fake page
-                $post = new stdClass;
-               	$post->post_author = 1;
-                $post->post_name = $wp->request;
-               	$post->guid = get_home_url('/' . $this->keyword);
-             
-                $post->post_title = $this->keyword;
-                //put your custom content here
-                $post->post_content = $this->template_content;
-                //just needs to be a number - negatives are fine
-                $post->ID = $this->template->ID;
-                $post->post_status = 'publish';
-                $post->comment_status = 'closed';
-                $post->ping_status = 'open';
-                $post->comment_count = 0;
-                //dates may need to be overwritten if you have a "recent posts" widget or similar - set to whatever you want
-                $post->post_date = current_time('mysql');
-                $post->post_date_gmt = current_time('mysql',1);
-                $post->post_parent = 0;
-                $post->menu_order = 0;
-                $post->filter ='raw';
-                // is page or a post
-                $post->post_type = $this->template->post_type;
+	            	$this->keyword = str_replace('-', ' ', $this->keyword);
+	            	$post = $this->template;
+	            	
+	                $post->post_name = $wp->request;
+	               	//$post->guid = get_home_url('/' . $this->keyword);
+	             
+	                $post->post_title = $this->keyword;
+	                //put your custom content here
+	                $post->post_content = $this->template_content;
 
-                $posts = NULL;
-                $posts[] = $post;
+	                //just needs to be a number - negatives are fine
+	                $post->post_status = 'publish';
+	                $post->comment_status = 'closed';
+	                $post->ping_status = 'open';
+	                $post->comment_count = 0;
+	                //dates may need to be overwritten if you have a "recent posts" widget or similar - set to whatever you want
+	                
+	                $post->post_parent = 0;
+	                $post->menu_order = 0;
+	                $post->filter ='raw';
 
-                $wp_query->is_singular = TRUE;
-                $wp_query->is_home = FALSE;
-                $wp_query->is_archive = FALSE;
-                $wp_query->is_category = FALSE;
-                unset($wp_query->query['error']);
-                $wp_query->query_vars['error']='';
-                $wp_query->is_404 = FALSE;
-                $wp_query->found_posts = TRUE;
-                $wp_query->is_attachment = FALSE;
-                $wp_query->query_vars['page'] = 0;
-                $wp_query->query_vars['attachment'] = NULL;
-                unset($wp_query->query['attachment']);
-                
-                if ($post->post_type == 'post')
-                {
-                	// add the uncateegorized class to the article
-            		add_filter('post_class',array($this, 'add_uncategorized_class'));
-                	$wp_query->query['name'] = $this->keyword;
-                	$wp_query->is_page = FALSE;
-                	$wp_query->is_single = TRUE;
-                }
-                else
-                {
-               		$wp_query->query['pagename'] = $this->keyword;
-               		$wp_query->query_vars['pagename'] = $this->keyword;
-               		$wp_query->is_page = TRUE;
-               		$wp_query->is_single = FALSE;
-                }
-                $wp_query->query['page'] = NULL;
-            }
+	                $posts = NULL;
+	                $posts[] = $post;
+
+	                $wp_query->is_singular = TRUE;
+	                $wp_query->is_home = FALSE;
+	                $wp_query->is_archive = FALSE;
+
+	                if (!is_null($this->category_slug))
+	                	$wp_query->is_category = FALSE;
+
+	                unset($wp_query->query['error']);
+	                $wp_query->query_vars['error']='';
+	                $wp_query->is_404 = FALSE;
+	                $wp_query->found_posts = TRUE;
+	                $wp_query->is_attachment = FALSE;
+	                $wp_query->query_vars['page'] = 0;
+	                $wp_query->query_vars['attachment'] = NULL;
+	                unset($wp_query->query['attachment']);
+	                
+	                if ($post->post_type == 'post')
+	                {
+	                	// add the uncateegorized class to the article
+	            		add_filter('post_class',array($this, 'add_uncategorized_class'));
+	                	$wp_query->query['name'] = $this->keyword;
+	                	$wp_query->is_page = FALSE;
+	                	$wp_query->is_single = TRUE;
+	                }
+	                else
+	                {
+	               		$wp_query->query['pagename'] = $this->keyword;
+	               		$wp_query->query_vars['pagename'] = $this->keyword;
+	               		$wp_query->is_page = TRUE;
+	               		$wp_query->is_single = FALSE;
+	                }
+	                $wp_query->query['page'] = NULL;
+            	}
             }
 
             return $posts;
@@ -490,6 +491,16 @@ if (!class_exists('VirtualPagesTemplates'))
 
 			echo '<p><strong>' . $this->notice . '</strong></p></div>';
 		}   
+
+		public function is_virtual_page()
+		{
+			return $this->is_virtual_page;
+		}
+
+		public function set_is_virtual_page($is_virtual_page = FALSE)
+		{
+			$this->is_virtual_page = $is_virtual_page;
+		}
 
 	}	
 }
