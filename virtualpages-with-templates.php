@@ -39,7 +39,14 @@ if (!class_exists('VirtualPagesTemplates'))
 				add_filter('the_posts', array(&$this, 'create_virtual'));
 				add_action('template_redirect', array($this, 'virtual_page_redirect'));
 
+				remove_action('wp_head', 'rel_canonical');
+				add_action('wp_head', array($this, 'vpt_rel_canonical'),10);
+
 				remove_action( 'wp_head', 'wp_shortlink_wp_head', 10, 0 ); // Remove WordPress shortlink on wp_head hook
+				add_action('wp_head', array($this, 'vpt_shortlink_wp_head'), 10, 0); // custom shortlink
+
+				add_filter('body_class', array($this, 'vpt_body_class'), 20, 2);
+				
 			}else{
 				add_action( 'admin_menu', array($this, 'display_menu') );
 				register_uninstall_hook(__FILE__, array('VirtualPagesTemplates','vpt_uninstall_plugin'));
@@ -49,6 +56,81 @@ if (!class_exists('VirtualPagesTemplates'))
 			$this->permalink_structure = get_option('permalink_structure');
 	  	}
 
+	  	/**
+		 * overrides the WP rel_canonical - use the correct canonical tags for virtual pages
+		 *
+		*/
+	  	public function vpt_rel_canonical()
+	  	{
+	  		if ( !is_singular() )
+				return;
+
+			global $wp_the_query;
+			if ( !$id = $wp_the_query->get_queried_object_id() )
+				return;
+
+
+			if (!is_null($this->template) && $id == $this->template->ID)
+			{
+				global $wp_rewrite;
+				$link = $wp_rewrite->get_page_permastruct();
+				$link = str_replace('%pagename%', get_page_uri( $GLOBALS['post'] ), $link);
+
+				$link = home_url($link);
+				$link = user_trailingslashit($link, $GLOBALS['post']->post_type);
+			}else
+				$link = get_permalink( $id );
+
+			if ( $page = get_query_var('cpage') )
+				$link = get_comments_pagenum_link( $page );
+
+			echo "<link rel='canonical' href='{$link}' />\n";
+	  	}
+
+	  	/**
+		 *  overrides the WP wp_get_shortlink - only display the shortlink for normal pages
+		 *
+		 *  Attached to the wp_head action.
+		 *
+		 * @uses vpt_shortlink_wp_head()
+		 */
+	  	public function vpt_shortlink_wp_head()
+	  	{
+	  		if (is_null($this->template))
+	  		{
+	  			$shortlink = wp_get_shortlink( 0, 'query' );
+
+				if ( empty( $shortlink ) )
+					return;
+
+				echo "<link rel='shortlink' href='" . esc_url( $shortlink ) . "' />\n";
+	  		}
+	  	}
+
+	  	/**
+		 * deletes the body classes e.g. page-id-4 or postid-4 if a virtual post/page
+		 *
+		*/
+	  	public function vpt_body_class($wp_classes)
+	  	{
+	  		if (!is_null($this->template))
+	  		{
+	  			foreach ($wp_classes as $k => $v)
+	  			{
+	  				if ($GLOBALS['post']->post_type == 'page')
+	  				{
+	  					if ($v == 'page-id-' . $GLOBALS['post']->ID) unset($wp_classes[$k]);
+	  				}
+	  				else
+	  				{
+	  					if ($v == 'postid-' . $GLOBALS['post']->ID) unset($wp_classes[$k]);
+	  				}
+	  			}
+	  		}
+
+	  		return $wp_classes;
+	  	}
+	  	
 	  	/**
 		* vpt_uninstall_plugin
 		* 
@@ -73,18 +155,21 @@ if (!class_exists('VirtualPagesTemplates'))
 		    if (is_search()) {
 		        global $wp_query;
 
-		        if ($this->options['affect_search'] && (count($wp_query->posts) == 0 || (isset($wp_query->query['error']) && $wp_query->query['error'] == '404') || (count($wp_query->posts) == 1 && $wp_query->post->ID == -1)))
+		        if ($this->options['affect_search'] )
 		        {
-	        	$structure = $this->permalink_structure;
-	        	if ($this->use_custom_permalink){
-	        		$structure = $this->options['virtualpageurl'];
-		        }
+		        	if (count($wp_query->posts) == 0  || !is_null($this->template) && $wp_query->post->ID == $this->template->ID)
+		        	{
+		        		$structure = $this->permalink_structure;
+			        	if ($this->use_custom_permalink){
+			        		$structure = $this->options['virtualpageurl'];
+				        }
 
-	        	if (strpos($structure, '%postname%')){
-	        		$structure = str_replace('%postname%', $wp_query->query['s'] , $structure) ;
-	        		$structure = str_replace('%category%', $this->category_slug , $structure) ;
-	        		wp_redirect( $structure );
-	        	}
+			        	if (strpos($structure, '%postname%')){
+			        		$structure = str_replace('%postname%', $wp_query->query['s'] , $structure) ;
+			        		$structure = str_replace('%category%', $this->category_slug , $structure) ;
+			        		wp_redirect( $structure );
+			        	}
+			        }	
 		        }
 		    }
 		}
@@ -261,7 +346,13 @@ if (!class_exists('VirtualPagesTemplates'))
             	if (isset($this->options['page_template']))
             	{
             	$this->keyword = str_replace('-', ' ', $this->keyword);
+<<<<<<< HEAD
 
+=======
+            	// get the template details
+            	$this->template_content = $this->get_template_content();
+            	
+>>>>>>> master
             	//create a fake page
                 $post = new stdClass;
                	$post->post_author = 1;
@@ -272,7 +363,7 @@ if (!class_exists('VirtualPagesTemplates'))
                 //put your custom content here
                 $post->post_content = $this->template_content;
                 //just needs to be a number - negatives are fine
-                $post->ID = -1;
+                $post->ID = $this->template->ID;
                 $post->post_status = 'publish';
                 $post->comment_status = 'closed';
                 $post->ping_status = 'open';
@@ -301,6 +392,7 @@ if (!class_exists('VirtualPagesTemplates'))
                 $wp_query->query_vars['page'] = 0;
                 $wp_query->query_vars['attachment'] = NULL;
                 unset($wp_query->query['attachment']);
+                
                 if ($post->post_type == 'post')
                 {
                 	// add the uncateegorized class to the article

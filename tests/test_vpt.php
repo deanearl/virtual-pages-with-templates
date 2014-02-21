@@ -251,7 +251,162 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		update_option('vpt_options', $post);
  	}
 
+ 	/**
+	 * Test plugin's vpt_shortlink_wp_head
+	 *
+	 * The test should will show the shortlink if the current page is not a normal page
+	 * will fail if the outputted shortlink is not equivalent to the expected shortlink
+	 * Shortlinks will not going to be displayed on Virtual pages
+	 *
+	 * @access public
+	 *
+	 * @return void
+	 */
+ 	function test_vpt_shortlink_wp_head()
+ 	{
+ 		global $wp_query;
+ 		// set post / page as singular
+ 		$wp_query->is_singular = TRUE;
+ 		$this->vpt->template = NULL;
+ 		// a test for normal page / post
+ 		$post = $this->factory->post->create_and_get();
+ 		$wp_query->queried_object_id = $post->ID;
+ 		$wp_query->queried_object = $post;
+ 		$expected_shortlink = "<link rel='shortlink' href='" . esc_url( $post->guid ) . "' />\n";
 
+ 		$shortlink_value = $this->get_vpt_shortlink_wp_head();
+
+ 		$this->assertEquals($expected_shortlink, $shortlink_value);
+
+ 		// test to not to show shortlinks if the page is a virtual page
+ 		$this->vpt->template = TRUE;
+ 		$shortlink_value = $this->get_vpt_shortlink_wp_head();
+ 		$this->assertEmpty($shortlink_value);
+
+ 		// set wp to default
+ 		$wp_query->queried_object = NULL;
+ 		$wp_query->queried_object_id = NULL;
+ 		$wp_query->is_singular = FALSE;
+ 	}
+
+ 	/**
+	 * Gets the out out of the plugin's vpt_shortlink_wp_head() method and store it in a variable
+	 *
+	 * @access private
+	 *
+	 * @return string
+	 */
+ 	private function get_vpt_shortlink_wp_head()
+ 	{
+ 		ob_start();
+ 		$this->vpt->vpt_shortlink_wp_head();
+ 		$shortlink_value = ob_get_contents();
+ 		ob_end_clean();
+ 		return $shortlink_value;
+ 	}
+
+ 	/**
+	 * Test plugin's vpt_rel_canonical
+	 *
+	 * The test should be able to get the correct canonical tags for normal and virtual pages
+	 *
+	 * @access public
+	 *
+	 * @return void
+	 */
+ 	function test_vpt_rel_canonical()
+ 	{
+ 		global $wp_query;
+ 		global $wp_the_query;
+ 		global $wp_rewrite;
+ 		// set post / page as singular
+ 		$wp_query->is_singular = TRUE;
+
+ 		// test to show the canonical tag based on the permalink structure
+ 		$this->vpt->template = NULL;
+ 		update_option('permalink_structure' , '/%postname%/');
+ 		$wp_rewrite->page_structure = '%pagename%';
+
+ 		$post = $this->factory->post->create_and_get();
+ 		$wp_the_query->queried_object_id = $post->ID;
+ 		$wp_the_query->queried_object = $post;
+ 		$GLOBALS['post'] = $post;
+
+ 		$expected_canonical = "<link rel='canonical' href='{$post->guid}' />\n"; // http://example.org/post-title-1
+
+ 		$canonical_link = $this->get_vpt_rel_canonical();
+ 		
+ 		$this->assertEquals($expected_canonical, $canonical_link);
+
+ 		// test to show the canonical tag for virtual pages
+ 		$this->vpt->template = TRUE;
+
+ 		$this->vpt->keyword = $this->test_vpt_keyword;
+ 		$this->vpt->options = array('page_template' => $post->ID);
+ 		$output = $this->vpt->get_template_content();
+
+ 		// mimic page search
+ 		$post->guid = 'http://example.org/';
+ 		$expected_url = $post->guid . 'testing/' . $post->post_name;
+ 		$post->post_name = '/testing/' . $post->post_name;
+ 		
+ 		$expected_canonical = "<link rel='canonical' href='{$expected_url}' />\n"; 
+ 		$canonical_link = $this->get_vpt_rel_canonical();
+
+ 		$this->assertEquals($expected_canonical, $canonical_link);
+ 	}
+
+ 	/**
+	 * Gets the out out of the plugin's vpt_rel_canonical() method and store it in a variable
+	 *
+	 * @access private
+	 *
+	 * @return string
+	 */
+ 	private function get_vpt_rel_canonical()
+ 	{
+ 		ob_start();
+ 		$this->vpt->vpt_rel_canonical();
+ 		$canonical_link = ob_get_contents();
+ 		ob_end_clean();
+ 		return $canonical_link;
+ 	}
+
+ 	/**
+	 * Test plugin's vpt_body_class
+	 *
+	 * body class e.g. postid-1 or page-id-1 should only be displayed on normal pages
+	 *
+	 * @access public
+	 *
+	 * @return void
+	 */
+ 	function test_vpt_body_class()
+ 	{
+ 		// POST
+ 		$GLOBALS['post'] = $this->factory->post->create_and_get( array('post_type' => 'post') );
+
+ 		$wp_classes_post = array('single', 'single-post', 'postid-' . $GLOBALS['post']->ID, 'single-format-standard', 'masthead-fixed', 'full-width', 'singular');
+
+ 		// normal post - body class should be existing
+ 		$this->assertTrue(in_array('postid-' . $GLOBALS['post']->ID, $this->vpt->vpt_body_class($wp_classes_post)));
+
+ 		// virtual page - body class should not be existing
+ 		$this->vpt->template = TRUE;
+ 		$this->assertFalse(in_array('postid-' . $GLOBALS['post']->ID, $this->vpt->vpt_body_class($wp_classes_post)));
+
+ 		// PAGE
+ 		$this->vpt->template = NULL;
+ 		$GLOBALS['post'] = $this->factory->post->create_and_get( array('post_type' => 'page') );
+ 		$wp_classes_page = array('page', 'page-id-' . $GLOBALS['post']->ID, 'page-template-default', 'masthead-fixed', 'full-width', 'singular');
+	 		
+ 		// normal post - body class should be existing
+ 		$this->assertTrue(in_array('page-id-' . $GLOBALS['post']->ID, $this->vpt->vpt_body_class($wp_classes_page)));
+
+ 		// virtual page - body class should not be existing
+ 		$this->vpt->template = TRUE;
+ 		$this->assertFalse(in_array('page-id-' . $GLOBALS['post']->ID, $this->vpt->vpt_body_class($wp_classes_page)));
+ 	}
 
  	/**
  	 * sets the current user as the admin / temporarily overrides the current user
