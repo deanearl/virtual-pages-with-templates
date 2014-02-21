@@ -346,13 +346,7 @@ if (!class_exists('VirtualPagesTemplates'))
             	if (isset($this->options['page_template']))
             	{
             	$this->keyword = str_replace('-', ' ', $this->keyword);
-<<<<<<< HEAD
 
-=======
-            	// get the template details
-            	$this->template_content = $this->get_template_content();
-            	
->>>>>>> master
             	//create a fake page
                 $post = new stdClass;
                	$post->post_author = 1;
