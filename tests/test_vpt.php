@@ -111,6 +111,8 @@ class WP_Test_Vpt extends WP_UnitTestCase
  	 */
  	function test_form_submission()
  	{	
+ 		$id = $this->factory->post->create(array('post_title' => 'a test title', 'post_content' => '', 'post_type' => 'page'));
+
  		// will use current permalink struct but no template used
  		$post = array('vpt_hidden' => 'Y');
  		$this->assertFalse($this->check_posts($post));
@@ -126,6 +128,9 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		// used a template and will use current permalink struct
  		$post = array('vpt_hidden' => 'Y', 'page_template' => 1);
  		$this->assertTRUE($this->check_posts($post));
+ 		// should fail if the page template is a post and vurl struct contains %category%
+ 		$post = array('vpt_hidden' => 'Y', 'use_custom_permalink_structure' => 1, 'virtualpageurl' => '/%category%/', 'page_template' => $id);
+ 		$this->assertFalse($this->check_posts($post));
  	}
 
  	/**
@@ -139,6 +144,10 @@ class WP_Test_Vpt extends WP_UnitTestCase
 				return FALSE;
 			}
 			elseif (!isset($post['page_template'])){
+				return FALSE;
+			}
+			elseif (isset($post['use_custom_permalink_structure']) && strpos($post['virtualpageurl'],'%category%') !== false && get_post($post['page_template'])->post_type == 'page')
+			{
 				return FALSE;
 			}
 			else
@@ -190,8 +199,12 @@ class WP_Test_Vpt extends WP_UnitTestCase
  	}
 
  	/**
- 	 * test the actual virtual content creation
- 	 */
+	 * test the actual virtual content creation
+	 *
+	 * @access public
+	 *
+	 * @return void
+	 */
  	function test_create_virtual()
  	{
  		$kw_url = $this->test_vpt_keyword;
@@ -216,6 +229,16 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		$this->start_asserting($test_wp_permalinks, $test_wp_urls, $id );
  	}
 
+ 	/**
+	 * start asseting given urls
+	 *
+	 * @access private
+	 *
+	 * @param array $permalinks array of permalink urls
+	 * @param array $urls array of test urls
+	 * @param int $post_id
+	 * @return void
+	 */
  	private function start_asserting($permalinks, $urls, $post_id)
  	{
  		// do not use custom permalink
@@ -245,8 +268,13 @@ class WP_Test_Vpt extends WP_UnitTestCase
  	}
 
  	/**
- 	 * update vpt options
- 	 */
+	 * update the `vpt_option
+	 *
+	 *
+	 * @access private
+	 *
+	 * @return void
+	 */
  	private function update_vpt_option($use_custom_permalink_structure = 0, $virtualpageurl = NULL, $page_template = NULL, $post_type = 'post')
  	{
  		$post = array('use_custom_permalink_structure' => $use_custom_permalink_structure, 
@@ -415,6 +443,26 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		$this->assertFalse(in_array('page-id-' . $GLOBALS['post']->ID, $this->vpt->vpt_body_class($wp_classes_page)));
  	}
 
+ 	/**
+	 * Check's whether the `is_virtual_page` is set correctly
+	 *
+	 *
+	 * @access public
+	 *
+	 * @return void
+	 */
+ 	function test_set_is_virtual_page()
+ 	{
+ 		// as a default virtual page should FALSE
+ 		$this->assertFalse($this->vpt->is_virtual_page());
+ 		$this->vpt->set_is_virtual_page();
+ 		// setting to NULL defaults to FALSE
+ 		$this->assertFalse($this->vpt->is_virtual_page());
+ 		// setting to TRUE should result to TRUE
+ 		$this->vpt->set_is_virtual_page(TRUE);
+ 		$this->assertTRUE($this->vpt->is_virtual_page());
+ 	}
+ 	
  	/**
  	 * sets the current user as the admin / temporarily overrides the current user
  	 */

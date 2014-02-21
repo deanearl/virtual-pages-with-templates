@@ -220,7 +220,7 @@ if (!class_exists('VirtualPagesTemplates'))
 				{
 					$extra = '&error=' . self::ERR_TEMPLATE ;
 				}
-				elseif ($_POST['use_custom_permalink_structure'] && strpos($_POST['virtualpageurl'],'%category%') !== false && get_post($_POST['page_template'])->post_type == 'page')
+				elseif (isset($_POST['use_custom_permalink_structure']) && strpos($_POST['virtualpageurl'],'%category%') !== false && get_post($_POST['page_template'])->post_type == 'page')
 				{
 					$extra = '&error=' . self::ERR_CATEGORY ;
 				}
@@ -492,11 +492,26 @@ if (!class_exists('VirtualPagesTemplates'))
 			echo '<p><strong>' . $this->notice . '</strong></p></div>';
 		}   
 
+		/**
+		* gets whether the current page is a virtual url or not
+		* 
+		*
+		* @access public 
+		* @return BOOL $is_virtual_page
+		*/
 		public function is_virtual_page()
 		{
 			return $this->is_virtual_page;
 		}
 
+		/**
+		* sets whether the current page is a virtual url or not
+		* 
+		*
+		* @access public 
+		* @param BOOL $is_virtual_page
+		* @return void
+		*/
 		public function set_is_virtual_page($is_virtual_page = FALSE)
 		{
 			$this->is_virtual_page = $is_virtual_page;
