@@ -305,7 +305,7 @@ if (!class_exists('VirtualPagesTemplates'))
             	$regex = str_replace('/', "\/", $regex);
 
             	$match = preg_match('/(?Ji)^' . $regex.'/', $current_url_trimmed, $matches);
-
+            	print_r($matches);
 				if ($match && isset($matches['postname']))
 					$this->keyword = $matches['postname'];
 			}
@@ -470,18 +470,36 @@ if (!class_exists('VirtualPagesTemplates'))
 	            	$this->category_slug = $category->slug;
 	            }
 	       		
+	       		$got_custom = FALSE;
 	            if (isset($wp_query->query['category_name']))
 	            {
 	            	$slug = $this->get_category_slug($wp_query->query['category_name']);
 	            	if ($slug)
+	            	{
 	            		$this->category_slug = $slug;
+	            		$got_custom = TRUE;
+	            	}
 	            }
 	            
-	            if (isset($wp_query->query['name']))
+	            if (isset($wp_query->query['name']) && !$got_custom)
 	            {
 	            	$slug = $this->get_category_slug($wp_query->query['name']);
 	            	if ($slug)
+	            	{
 	            		$this->category_slug = $slug;
+	            		$got_custom = TRUE;
+	            	}
+	            }
+
+	            // can't get anything, directly read the URL
+	            if (!$got_custom )
+	            {	
+	            	$slug = $this->get_category_slug(rtrim($_SERVER['REQUEST_URI'], '/'));
+	            	if ($slug)
+	            	{
+	            		$this->category_slug = $slug;
+	            		$got_custom = TRUE;
+	            	}
 	            }
 	            
 			}
@@ -502,8 +520,8 @@ if (!class_exists('VirtualPagesTemplates'))
 		{
 			if (!is_object($path))
 			{
-				if ($this->keyword)
-					$path = str_replace($this->keyword, '', $path);
+				//if ($this->keyword)
+				//	$path = str_replace($this->keyword, '', $path);
 
 				$cat = get_category_by_path($path);
 	        	if (empty($cat))
@@ -533,14 +551,16 @@ if (!class_exists('VirtualPagesTemplates'))
 			}
 			// explode the path and check vs all categories
 			if (is_null($category_slug) && !is_object($path)){
+				
 				$categories = get_the_category($this->template->ID);
 				$paths = explode('/', $path);
 				$paths = array_reverse($paths);
 
 				foreach($paths as $path){
 					$cat = get_category_by_slug($path);	
+
 					if (!empty($cat) && is_object($cat))
-					{
+					{	
 						$this->get_category_slug($cat, $category_slug);
 						break;
 					}
