@@ -285,9 +285,14 @@ if (!class_exists('VirtualPagesTemplates'))
 		*/
 		public function init_keyword($current_url_trimmed, $virtualpageurl_trimmed){
 			global $wp,$wp_query;
-			if (isset($wp_query->query['name']) and $wp_query->query['name'])
+			
+			if (isset($wp_query->query['s']) && $wp_query->query['s'])
             {
-            	$this->keyword = $wp_query->query['name'];
+            	$this->keyword = $wp_query->query['s'];
+            }
+            elseif (isset($wp_query->query['name']) && $wp_query->query['name'] && !get_category_by_path($wp_query->query['name']) && !get_category_by_slug($wp_query->query['name']))
+            {
+                 $this->keyword = $wp_query->query['name'];
             }
             else
             {
@@ -300,10 +305,11 @@ if (!class_exists('VirtualPagesTemplates'))
             	$regex = str_replace('/', "\/", $regex);
 
             	$match = preg_match('/(?Ji)^' . $regex.'/', $current_url_trimmed, $matches);
-            	if (!empty($matches) && count($matches) > 0 && !empty($matches[0])){
-            		$this->keyword = $matches['postname'];
-            	}
+
+				if ($match && isset($matches['postname']))
+					$this->keyword = $matches['postname'];
 			}
+              
 		}
 
 		/**
@@ -317,7 +323,7 @@ if (!class_exists('VirtualPagesTemplates'))
 		*/
 		public function create_virtual($posts)
 		{
-			global $wp,$wp_query;
+               global $wp,$wp_query, $wp_rewrite;
 
             $this->options = get_option('vpt_options');
 
@@ -326,10 +332,14 @@ if (!class_exists('VirtualPagesTemplates'))
             	$this->options['use_custom_permalink_structure'] = 0;
             $this->use_custom_permalink = (BOOL) $this->options['use_custom_permalink_structure'];
 
-            if (!$this->use_custom_permalink)
+            if (!$this->use_custom_permalink){
 				$virtualpageurl = $this->permalink_structure;
-            else
+            }
+            else{
             	$virtualpageurl = $this->options['virtualpageurl'];
+         		//$wp_rewrite->permalink_structure = $this->options['virtualpageurl'];       
+            }
+
 
             // trim slashes
             $virtualpageurl_trimmed = trim($virtualpageurl, '/');
@@ -403,6 +413,15 @@ if (!class_exists('VirtualPagesTemplates'))
 	               		$wp_query->is_page = TRUE;
 	               		$wp_query->is_single = FALSE;
 	                }
+
+                     // remove these values so that virtual page will work normally
+                         if (isset($wp_query->query['category_name']))
+                          unset($wp_query->query['category_name']);
+                     if (isset($wp_query->query_vars['category_name']))
+                          unset($wp_query->query_vars['category_name']);
+
+                     $wp_query->query['name'] = $this->keyword;
+
 	                $wp_query->query['page'] = NULL;
             	}
             }
@@ -435,7 +454,7 @@ if (!class_exists('VirtualPagesTemplates'))
 		*/
 		public function get_template_content()
 		{
-			global $wp,$wp_query;
+			global $wp,$wp_query, $wp_rewrite;
 
 			if (isset($this->options['page_template']))
 			{
@@ -450,11 +469,87 @@ if (!class_exists('VirtualPagesTemplates'))
 	            {
 	            	$this->category_slug = $category->slug;
 	            }
-
+	       		
+	            if (isset($wp_query->query['category_name']))
+	            {
+	            	$slug = $this->get_category_slug($wp_query->query['category_name']);
+	            	if ($slug)
+	            		$this->category_slug = $slug;
+	            }
+	            
+	            if (isset($wp_query->query['name']))
+	            {
+	            	$slug = $this->get_category_slug($wp_query->query['name']);
+	            	if ($slug)
+	            		$this->category_slug = $slug;
+	            }
+	            
 			}
 
 			return $this->template_content;
 		}
+
+		/**
+		* gets the category slug from the given file / name / object
+		* 
+		*
+		* @access public 
+		* @param string / object $path 
+		* @param string $category_slug 
+		* @return string $category_slug
+		*/
+		public function get_category_slug($path = NULL,  &$category_slug = NULL)
+		{
+			if (!is_object($path))
+			{
+				if ($this->keyword)
+					$path = str_replace($this->keyword, '', $path);
+
+				$cat = get_category_by_path($path);
+	        	if (empty($cat))
+	        	{
+	        		$cat = get_category_by_slug($path);
+	        	}	
+			}
+			else
+			{
+				$cat = $path;
+			}
+
+        	if (is_object($cat))
+			{
+			    if ($cat->parent > 0)
+			    {
+			        $category_slug = $cat->slug.'/'.$category_slug;
+			        $this->get_category_slug(get_category($cat->parent), $category_slug);
+			    }
+			    else
+			    {
+			        if (!is_null($category_slug))
+						$category_slug = $cat->slug.'/'.$category_slug;
+			        else
+			            $category_slug = $cat->slug;
+			    }
+			}
+			// explode the path and check vs all categories
+			if (is_null($category_slug) && !is_object($path)){
+				$categories = get_the_category($this->template->ID);
+				$paths = explode('/', $path);
+				$paths = array_reverse($paths);
+
+				foreach($paths as $path){
+					$cat = get_category_by_slug($path);	
+					if (!empty($cat) && is_object($cat))
+					{
+						$this->get_category_slug($cat, $category_slug);
+						break;
+					}
+				}
+			}
+
+        	return rtrim($category_slug, '/');
+		}
+
 
 		/**
 		 * Include required admin files.

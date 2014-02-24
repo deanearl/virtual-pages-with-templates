@@ -462,6 +462,29 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		$this->vpt->set_is_virtual_page(TRUE);
  		$this->assertTRUE($this->vpt->is_virtual_page());
  	}
+
+ 	/**
+	 * test the plugin's get_category_slug
+	 *
+	 *
+	 * @access public
+	 *
+	 * @return void
+	 */
+ 	function test_get_category_slug()
+ 	{
+ 		// normal
+ 		$category = $this->factory->category->create_and_get(array('slug' => $this->test_vpt_category_slug, 'name' => 'some category'));
+ 		$category2 = $this->factory->category->create_and_get(array('slug' => $this->test_vpt_category_slug.'2', 'name' => 'some category2'));
+ 		// children
+ 		$category1_child = $this->factory->category->create_and_get(array('slug' => $this->test_vpt_category_slug.'-child', 'name' => 'some category child', 'parent' => $category->term_id));
+ 		$category1_child_child = $this->factory->category->create_and_get(array('slug' => $this->test_vpt_category_slug.'-child-child', 'name' => 'some category child child', 'parent' => $category1_child->term_id));
+
+	 	$this->assertEquals($this->test_vpt_category_slug, $this->vpt->get_category_slug($this->test_vpt_category_slug));
+	 	$this->assertEquals($this->test_vpt_category_slug.'2', $this->vpt->get_category_slug($this->test_vpt_category_slug.'2'));
+	 	$this->assertEquals($this->test_vpt_category_slug.'/'.$this->test_vpt_category_slug.'-child', $this->vpt->get_category_slug($this->test_vpt_category_slug.'-child'));
+	 	$this->assertEquals($this->test_vpt_category_slug.'/'.$this->test_vpt_category_slug.'-child'.'/'.$this->test_vpt_category_slug.'-child-child', $this->vpt->get_category_slug($this->test_vpt_category_slug.'-child-child'));
+ 	}
  	
  	/**
  	 * sets the current user as the admin / temporarily overrides the current user
