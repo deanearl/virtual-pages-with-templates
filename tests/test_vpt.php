@@ -173,8 +173,27 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		$this->assertNull($this->vpt->keyword);
 
  		$virtualpageurl = '/shop/%postname%';
- 		$current_url = '/shop/'. $this->test_vpt_keyword;;
+ 		$current_url = '/shop/'. $this->test_vpt_keyword;
  		$this->vpt->init_keyword($current_url, $virtualpageurl);
+ 		$this->assertEquals($this->test_vpt_keyword, $this->vpt->keyword);
+
+ 		$this->vpt->keyword = NULL;
+
+ 		// create a post then assign a category
+ 		// assert for categories
+ 		$test_content = 'a test content with keyword - `'. $this->keyword_tag .'`';
+		$id = $this->factory->post->create(array('post_title' => 'a test title', 'post_content' => ''));
+
+ 		$category = $this->factory->category->create_and_get(array('slug' => $this->test_vpt_category_slug, 'name' => 'some category'));
+		wp_set_post_categories( $id, array($category->term_id) ) ;
+		$this->vpt->category_slug = $this->test_vpt_category_slug;
+
+		$this->vpt->get_category_slug($this->test_vpt_category_slug);
+
+ 		$virtualpageurl = '/%category%/%postname%/';
+ 		$current_url = '/'. $this->test_vpt_category_slug .'/'. $this->test_vpt_keyword . '/';
+ 		$this->vpt->init_keyword($current_url, $virtualpageurl);
+ 		
  		$this->assertEquals($this->test_vpt_keyword, $this->vpt->keyword);
  	}
 
