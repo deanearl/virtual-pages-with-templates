@@ -296,16 +296,21 @@ if (!class_exists('VirtualPagesTemplates'))
             }
             else
             {
-            	$needles = array('%postname%', '%category%');
+            	$needles = array('%postname%');
+
+            	// replace the category
+            	if ($this->category_slug)
+            		$virtualpageurl_trimmed = str_replace('%category%', $this->category_slug, $virtualpageurl_trimmed);
+
             	$replacements_regex = array(
                 	'(?<postname>[^/]+)',
-                	'(?<category>[^/]+)'
             	);
+            	
             	$regex = str_replace($needles, $replacements_regex, $virtualpageurl_trimmed);
             	$regex = str_replace('/', "\/", $regex);
 
             	$match = preg_match('/(?Ji)^' . $regex.'/', $current_url_trimmed, $matches);
-            	print_r($matches);
+            	
 				if ($match && isset($matches['postname']))
 					$this->keyword = $matches['postname'];
 			}
@@ -345,11 +350,12 @@ if (!class_exists('VirtualPagesTemplates'))
             $virtualpageurl_trimmed = trim($virtualpageurl, '/');
             $current_url_trimmed = trim($current_url, '/');
 
+            // get the template details
+            $this->template_content = $this->get_template_content();
+
             $this->init_keyword($current_url_trimmed, $virtualpageurl_trimmed);
             $virtual_url = str_replace('%postname%', $this->keyword, $virtualpageurl_trimmed);
 
-            // get the template details
-            $this->template_content = $this->get_template_content();
             $virtual_url = str_replace('%category%', $this->category_slug, $virtual_url);
             
             if ($virtual_url == $current_url_trimmed && (count($wp_query->posts) == 0 || (isset($wp_query->query['error']) && $wp_query->query['error'] == '404')) ) 
