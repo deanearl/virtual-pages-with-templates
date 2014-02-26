@@ -290,10 +290,6 @@ if (!class_exists('VirtualPagesTemplates'))
             {
             	$this->keyword = $wp_query->query['s'];
             }
-            elseif (isset($wp_query->query['name']) && $wp_query->query['name'] && !get_category_by_path($wp_query->query['name']) && !get_category_by_slug($wp_query->query['name']))
-            {
-                 $this->keyword = $wp_query->query['name'];
-            }
             else
             {
             	$needles = array('%postname%');
@@ -344,7 +340,6 @@ if (!class_exists('VirtualPagesTemplates'))
             	$virtualpageurl = $this->options['virtualpageurl'];
          		//$wp_rewrite->permalink_structure = $this->options['virtualpageurl'];       
             }
-
 
             // trim slashes
             $virtualpageurl_trimmed = trim($virtualpageurl, '/');
