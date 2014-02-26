@@ -26,6 +26,8 @@ if (!class_exists('VirtualPagesTemplates'))
         public $notice = NULL;
         public $notice_iserror = FALSE;
         public $menu_slug = NULL;
+        
+        private $blog_path = NULL;
 
         const ERR_URL = 1;
         const ERR_TEMPLATE = 2;
@@ -152,7 +154,7 @@ if (!class_exists('VirtualPagesTemplates'))
 	  	public function virtual_page_redirect() {
 		    if (is_search()) {
 		        global $wp_query;
-
+		        
 		        if ($this->options['affect_search'] )
 		        {
 		        	if (count($wp_query->posts) == 0  || !is_null($this->template) && $wp_query->post->ID == $this->template->ID)
@@ -162,8 +164,11 @@ if (!class_exists('VirtualPagesTemplates'))
 		        			$structure = $this->options['virtualpageurl'];
 			        	}
 
-		        		if (strpos($structure, '%postname%'))
+		        		if (strpos($structure, '%postname%')){
+		        			$structure = rtrim( $this->get_blog_path(), '/').$structure;
+
 		        			wp_redirect( str_replace('%postname%', $wp_query->query['s'] , $structure) );
+		        		}
 			        }	
 		        }
 		    }
@@ -303,7 +308,8 @@ if (!class_exists('VirtualPagesTemplates'))
 		public function create_virtual($posts)
 		{
 			global $wp,$wp_query;
-
+			
+			
             $this->options = get_option('vpt_options');
 
             $current_url = $_SERVER['REQUEST_URI'];
@@ -317,7 +323,9 @@ if (!class_exists('VirtualPagesTemplates'))
             	$virtualpageurl = $this->options['virtualpageurl'];
 
             // trim slashes
-            $virtualpageurl_trimmed = trim($virtualpageurl, '/');
+            $virtualpageurl_trimmed = ltrim($this->get_blog_path(), '/').trim($virtualpageurl, '/');
+            
+
             $current_url_trimmed = trim($current_url, '/');
 
             $this->init_keyword($current_url_trimmed, $virtualpageurl_trimmed);
@@ -427,6 +435,24 @@ if (!class_exists('VirtualPagesTemplates'))
 			return $this->template_content;
 		}
 
+		public function get_blog_path()
+		{
+			$blog_path = '/';
+			if (function_exists('get_current_blog_id') && function_exists('get_blog_details') && is_null($this->blog_path))
+			{
+				$this->blog_path = get_blog_details( get_current_blog_id())->path;
+			}
+			else
+			{
+				$this->blog_path = '/';
+			}
+			return $this->blog_path;
+		}
+
+		public function set_blog_path($blog_path = '/')
+		{
+			$this->blog_path = $blog_path;
+		}
 		/**
 		 * Include required admin files.
 		 *
