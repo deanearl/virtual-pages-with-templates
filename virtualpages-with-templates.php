@@ -27,7 +27,7 @@ if (!class_exists('VirtualPagesTemplates'))
         public $notice_iserror = FALSE;
         public $menu_slug = NULL;
 
-        private $blog_path = NULL;
+        private $blog_path = '/';
 
         const ERR_URL = 1;
         const ERR_TEMPLATE = 2;
@@ -440,19 +440,16 @@ if (!class_exists('VirtualPagesTemplates'))
 		* 
 		*
 		* @access public 
+		* @param BOOL $get_new
 		* @return string $blog_path
 		*/
 		public function get_blog_path()
 		{
-			$blog_path = '/';
-			if (function_exists('get_current_blog_id') && function_exists('get_blog_details') && is_null($this->blog_path))
+			if (function_exists('get_current_blog_id') && function_exists('get_blog_details'))
 			{
 				$this->blog_path = get_blog_details( get_current_blog_id())->path;
 			}
-			else
-			{
-				$this->blog_path = '/';
-			}
+			
 			return $this->blog_path;
 		}
 

@@ -208,14 +208,15 @@ class WP_Test_Vpt extends WP_UnitTestCase
 
  		
  		// use custom permalink
- 		$this->start_asserting($test_virtual_urls, $test_wp_urls, $id );
+ 		//$this->start_asserting($test_virtual_urls, $test_wp_urls, $id );
  		// do not use custom permalink
- 		$this->start_asserting($test_wp_permalinks, $test_wp_urls, $id );
+ 		//$this->start_asserting($test_wp_permalinks, $test_wp_urls, $id );
 
- 		$this->vpt->set_blog_path('/testsite1');
+ 		$this->vpt->set_blog_path('/testsite1/');
  		$test_wp_urls = array('/testsite1/'.$kw_url, '/testsite1/shop/'.$kw_url, '/testsite1/keyword/'.$kw_url, '/testsite1/keyword/'.$kw_url.'/testing');
- 		$test_virtual_urls = array('/testsite1/%postname%', '/testsite1/shop/%postname%', '/testsite1/keyword/%postname%/testing');
- 		$this->start_asserting($test_virtual_urls, $test_wp_urls, $id );
+ 		$test_virtual_urls = array('/%postname%', '/shop/%postname%', '/keyword/%postname%/testing');
+ 		
+ 		$this->start_asserting($test_virtual_urls, $test_wp_urls, $id, TRUE );
 
  	}
 
@@ -227,8 +228,11 @@ class WP_Test_Vpt extends WP_UnitTestCase
  			foreach ($urls as $url)
  			{
  				$_SERVER['REQUEST_URI'] = $url;
-
- 				$permalink_converted = str_replace('%postname%', $this->test_vpt_keyword, $permalink);
+ 				
+ 				if ($this->vpt->get_blog_path() != '/')
+ 					$permalink_converted = str_replace('%postname%', $this->test_vpt_keyword, $this->vpt->get_blog_path().ltrim($permalink,'/'));
+ 				else
+ 					$permalink_converted = str_replace('%postname%', $this->test_vpt_keyword, $permalink);
 
  				$this->update_vpt_option(TRUE, $permalink, $post_id, 'post');
  				
