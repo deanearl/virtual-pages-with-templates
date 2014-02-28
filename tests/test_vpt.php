@@ -245,6 +245,9 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		$this->start_asserting($test_virtual_urls, $test_wp_urls, $id );
  		// do not use custom permalink
  		$this->start_asserting($test_wp_permalinks, $test_wp_urls, $id );
+
+ 		$this->vpt->template = NULL;
+ 		$this->start_asserting($test_wp_permalinks, $test_wp_urls, NULL );
  	}
 
  	/**
@@ -274,7 +277,10 @@ class WP_Test_Vpt extends WP_UnitTestCase
  				if ($permalink_converted == $url)
  				{	
  					// redirect to a virtual post / page
- 					$this->assertNotEmpty( $this->vpt->create_virtual(array()), $permalink_converted . ' ' . $url );	
+ 					if (is_null($post_id)) 
+ 						$this->assertEmpty( $this->vpt->create_virtual(array()), $permalink_converted . ' ' . $url );	# not template set
+ 					else	
+ 						$this->assertNotEmpty( $this->vpt->create_virtual(array()), $permalink_converted . ' ' . $url );	
  				}
  				else
  				{
