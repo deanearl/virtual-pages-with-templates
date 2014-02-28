@@ -475,7 +475,7 @@ if (!class_exists('VirtualPagesTemplates'))
 	            if (isset($wp_query->query['category_name']))
 	            {
 	            	$slug = $this->get_category_slug($wp_query->query['category_name']);
-	            	if ($slug && in_category( $slug, $this->template->ID ) )
+	            	if ($slug)
 	            	{
 	            		$this->category_slug = $slug;
 	            		$got_custom = TRUE;
@@ -485,7 +485,7 @@ if (!class_exists('VirtualPagesTemplates'))
 	            if (isset($wp_query->query['name']) && !$got_custom)
 	            {
 	            	$slug = $this->get_category_slug($wp_query->query['name']);
-	            	if ($slug && in_category( $slug, $this->template->ID ) )
+	            	if ($slug)
 	            	{
 	            		$this->category_slug = $slug;
 	            		$got_custom = TRUE;
@@ -496,7 +496,7 @@ if (!class_exists('VirtualPagesTemplates'))
 	            if (!$got_custom )
 	            {	
 	            	$slug = $this->get_category_slug(rtrim($_SERVER['REQUEST_URI'], '/'));
-	            	if ($slug && in_category( $slug, $this->template->ID ) )
+	            	if ($slug)
 	            	{
 	            		$this->category_slug = $slug;
 	            		$got_custom = TRUE;
@@ -536,19 +536,20 @@ if (!class_exists('VirtualPagesTemplates'))
 			}
 
         	if (is_object($cat))
-			{
-			    if ($cat->parent > 0)
-			    {
-			        $category_slug = $cat->slug.'/'.$category_slug;
-			        $this->get_category_slug(get_category($cat->parent), $category_slug);
-			    }
-			    else
-			    {
-			        if (!is_null($category_slug))
-						$category_slug = $cat->slug.'/'.$category_slug;
-			        else
-			            $category_slug = $cat->slug;
-			    }
+			{	if (in_category($cat, $this->template->ID)){
+				    if ($cat->parent > 0)
+				    {
+				        $category_slug = $cat->slug.'/'.$category_slug;
+				        $this->get_category_slug(get_category($cat->parent), $category_slug);
+				    }
+				    else
+				    {
+				        if (!is_null($category_slug))
+							$category_slug = $cat->slug.'/'.$category_slug;
+				        else
+				            $category_slug = $cat->slug;
+				    }
+				}
 			}
 			// explode the path and check vs all categories
 			if (is_null($category_slug) && !is_object($path)){
@@ -566,7 +567,7 @@ if (!class_exists('VirtualPagesTemplates'))
 					}
 				}
 			}
-
+			 
         	return rtrim($category_slug, '/');
 		}
 
