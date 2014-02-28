@@ -475,7 +475,7 @@ if (!class_exists('VirtualPagesTemplates'))
 	            if (isset($wp_query->query['category_name']))
 	            {
 	            	$slug = $this->get_category_slug($wp_query->query['category_name']);
-	            	if ($slug)
+	            	if ($slug && in_category( $slug, $this->template->ID ) )
 	            	{
 	            		$this->category_slug = $slug;
 	            		$got_custom = TRUE;
@@ -485,7 +485,7 @@ if (!class_exists('VirtualPagesTemplates'))
 	            if (isset($wp_query->query['name']) && !$got_custom)
 	            {
 	            	$slug = $this->get_category_slug($wp_query->query['name']);
-	            	if ($slug)
+	            	if ($slug && in_category( $slug, $this->template->ID ) )
 	            	{
 	            		$this->category_slug = $slug;
 	            		$got_custom = TRUE;
@@ -496,7 +496,7 @@ if (!class_exists('VirtualPagesTemplates'))
 	            if (!$got_custom )
 	            {	
 	            	$slug = $this->get_category_slug(rtrim($_SERVER['REQUEST_URI'], '/'));
-	            	if ($slug)
+	            	if ($slug && in_category( $slug, $this->template->ID ) )
 	            	{
 	            		$this->category_slug = $slug;
 	            		$got_custom = TRUE;
@@ -528,7 +528,7 @@ if (!class_exists('VirtualPagesTemplates'))
 	        	if (empty($cat))
 	        	{
 	        		$cat = get_category_by_slug($path);
-	        	}	
+	        	}
 			}
 			else
 			{
@@ -553,7 +553,6 @@ if (!class_exists('VirtualPagesTemplates'))
 			// explode the path and check vs all categories
 			if (is_null($category_slug) && !is_object($path)){
 				
-				$categories = get_the_category($this->template->ID);
 				$paths = explode('/', $path);
 				$paths = array_reverse($paths);
 
