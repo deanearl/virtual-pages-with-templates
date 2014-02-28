@@ -211,8 +211,7 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		$id = $this->factory->post->create(array('post_title' => 'a test title', 'post_content' => $test_content));
  		$this->vpt->options = array('page_template' => $id);
  		
- 		$this->vpt->keyword = $this->test_vpt_keyword;
- 		$output = $this->vpt->get_template_content();
+ 		$output = str_replace('%vpt-keyword%', $this->test_vpt_keyword, $this->vpt->get_template_content());
 
  		$this->assertEquals($expected_output, $output);
  	}
