@@ -188,6 +188,7 @@ class WP_Test_Vpt extends WP_UnitTestCase
 		wp_set_post_categories( $id, array($category->term_id) ) ;
 		$this->vpt->category_slug = $this->test_vpt_category_slug;
 
+		$this->vpt->template = get_post($id);
 		$this->vpt->get_category_slug($this->test_vpt_category_slug);
 
  		$virtualpageurl = '/%category%/%postname%/';
@@ -491,12 +492,19 @@ class WP_Test_Vpt extends WP_UnitTestCase
 	 */
  	function test_get_category_slug()
  	{
+ 		$test_content = 'a test content with keyword - `'. $this->keyword_tag .'`';
+		$id = $this->factory->post->create(array('post_title' => 'a test title', 'post_content' => ''));
+
+
  		// normal
  		$category = $this->factory->category->create_and_get(array('slug' => $this->test_vpt_category_slug, 'name' => 'some category'));
  		$category2 = $this->factory->category->create_and_get(array('slug' => $this->test_vpt_category_slug.'2', 'name' => 'some category2'));
  		// children
  		$category1_child = $this->factory->category->create_and_get(array('slug' => $this->test_vpt_category_slug.'-child', 'name' => 'some category child', 'parent' => $category->term_id));
  		$category1_child_child = $this->factory->category->create_and_get(array('slug' => $this->test_vpt_category_slug.'-child-child', 'name' => 'some category child child', 'parent' => $category1_child->term_id));
+ 		
+ 		$this->vpt->template = get_post($id);
+ 		wp_set_post_categories( $id, array($category->term_id, $category2->term_id, $category1_child->term_id, $category1_child_child->term_id) ) ;
 
 	 	$this->assertEquals($this->test_vpt_category_slug, $this->vpt->get_category_slug($this->test_vpt_category_slug));
 	 	$this->assertEquals($this->test_vpt_category_slug.'2', $this->vpt->get_category_slug($this->test_vpt_category_slug.'2'));
