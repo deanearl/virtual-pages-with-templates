@@ -367,7 +367,7 @@ if (!class_exists('VirtualPagesTemplates'))
 	             
 	                $post->post_title = $this->keyword;
 	                //put your custom content here
-	                $post->post_content = $this->template_content;
+	                $post->post_content = str_replace('%vpt-keyword%', $this->keyword, $this->template_content);
 
 	                //just needs to be a number - negatives are fine
 	                $post->post_status = 'publish';
@@ -460,8 +460,8 @@ if (!class_exists('VirtualPagesTemplates'))
 			if (isset($this->options['page_template']))
 			{
 				$this->template = get_post($this->options['page_template']);      
-			
-				$this->template_content = str_replace('%vpt-keyword%', $this->keyword, $this->template->post_content);
+				
+				$this->template_content = $this->template->post_content;
 
 				$categories = get_the_category($this->template->ID);
 				$category = current($categories);
