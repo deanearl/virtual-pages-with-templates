@@ -538,9 +538,9 @@ if (!class_exists('VirtualPagesTemplates'))
 			}
 
         	if (is_object($cat))
-			{	
-
+			{
 				if (in_category($cat->term_id, $this->template->ID)){
+
 
 				    if ($cat->parent > 0)
 				    {
