@@ -7,12 +7,15 @@
     $page_template = null;
     $use_custom_permalink_structure = FALSE;
     $affect_search = TRUE;
+    $hide_post_id = FALSE;
 
     if (!empty($options)){
         $virtualpageurl = $options['virtualpageurl'];
         $page_template = $options['page_template'];
         $use_custom_permalink_structure = $options['use_custom_permalink_structure'];
         $affect_search = $options['affect_search'];
+
+        $hide_post_id = (isset($options['hide_post_id']) ? $options['hide_post_id'] : FALSE);
     }
 
     $posts = new WP_Query( array( 'post_status' => array('draft'), 'post_type' => array('post') ) );
@@ -101,6 +104,15 @@
                 <?php if ($affect_search) $checked = 'checked="checked"'; else $checked = '';?>
                <label for="affect_search"><input type="checkbox" value="1" id="affect_search" <?php echo $checked;?> name="affect_search"></label>
                <p class="description">Generate virtual page using the searched keyword if there are no pages found</p>
+            </td>
+            </tr>
+
+            <tr valign="top">
+            <th scope="row"><?php _e('Hide ID' ); ?></th>
+            <td>
+                <?php if ($hide_post_id) $checked = 'checked="checked"'; else $checked = '';?>
+               <label for="hide_post_id"><input type="checkbox" value="1" id="hide_post_id" <?php echo $checked;?> name="hide_post_id"></label>
+               <p class="description">Hides the post/page id from the virtual page</p>
             </td>
             </tr>
             </tbody>

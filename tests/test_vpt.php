@@ -442,11 +442,16 @@ class WP_Test_Vpt extends WP_UnitTestCase
 
  		// normal post - body class should be existing
  		$this->vpt->set_is_virtual_page(FALSE);
+ 		$this->vpt->hide_post_id = TRUE;
  		$this->assertTrue(in_array('postid-' . $GLOBALS['post']->ID, $this->vpt->vpt_body_class($wp_classes_post)));
 
  		// virtual page - body class should not be existing
  		
  		$this->vpt->set_is_virtual_page(TRUE);
+ 		$this->vpt->hide_post_id = FALSE;
+ 		$this->assertTrue(in_array('postid-' . $GLOBALS['post']->ID, $this->vpt->vpt_body_class($wp_classes_post)));
+
+ 		$this->vpt->hide_post_id = TRUE;
  		$this->assertFalse(in_array('postid-' . $GLOBALS['post']->ID, $this->vpt->vpt_body_class($wp_classes_post)));
 
  		// PAGE
@@ -459,7 +464,11 @@ class WP_Test_Vpt extends WP_UnitTestCase
 
  		// virtual page - body class should not be existing
  		$this->vpt->set_is_virtual_page(TRUE);
+ 		$this->vpt->hide_post_id = TRUE;
  		$this->assertFalse(in_array('page-id-' . $GLOBALS['post']->ID, $this->vpt->vpt_body_class($wp_classes_page)));
+
+ 		$this->vpt->hide_post_id = FALSE;
+ 		$this->assertTrue(in_array('page-id-' . $GLOBALS['post']->ID, $this->vpt->vpt_body_class($wp_classes_page)));
  	}
 
  	/**
@@ -483,13 +492,71 @@ class WP_Test_Vpt extends WP_UnitTestCase
  	}
 
  	/**
-	 * test the plugin's get_category_slug
+	 * Checks the plugin's `remove_article_id`
 	 *
 	 *
 	 * @access public
 	 *
 	 * @return void
 	 */
+ 	function test_remove_article_id()
+ 	{
+ 		$post = $this->factory->post->create_and_get( array('post_type' => 'post') );
+ 		$this->vpt->template = $post;
+
+ 		$test_html = '<article id="post-' . $post->ID . '">some article</article>';
+ 		$this->vpt->set_is_virtual_page(FALSE);
+
+ 		$output = $this->vpt->remove_article_id($test_html);
+
+ 		$this->assertEquals($output, $test_html);
+
+ 		$test_html = '<article id="post-' . $post->ID . '">some article</article>';
+ 		$expected_output = str_replace('<article id="post-' . $post->ID.'"', '<article', $test_html);
+ 		$this->vpt->set_is_virtual_page(TRUE);
+ 		$this->vpt->hide_post_id = TRUE;
+ 		$output = $this->vpt->remove_article_id($test_html);
+ 		$this->assertEquals($output, $expected_output);
+
+ 	}
+
+ 	/**
+	 * Test plugin's vpt_post_class
+	 *
+	 * body class e.g. postid-1 or page-id-1 should only be displayed on normal pages
+	 *
+	 * @access public
+	 *
+	 * @return void
+	 */
+ 	function test_vpt_post_class()
+ 	{
+ 		// POST
+ 		$GLOBALS['post'] = $this->factory->post->create_and_get( array('post_type' => 'post') );
+
+ 		$wp_classes_post = array('post','post-' . $GLOBALS['post']->ID, 'type-post', 'status-publish', 'format-standard', 'hentry', 'category-uncategorized');
+ 		// normal post - body class should be existing
+ 		$this->vpt->set_is_virtual_page(FALSE);
+ 		$this->assertTrue(in_array('post-' . $GLOBALS['post']->ID, $this->vpt->vpt_post_class($wp_classes_post)));
+
+ 		// virtual page - body class should not be existing
+ 		
+ 		$this->vpt->set_is_virtual_page(TRUE);
+ 		$this->vpt->hide_post_id = FALSE;
+ 		$this->assertTrue(in_array('post-' . $GLOBALS['post']->ID, $this->vpt->vpt_post_class($wp_classes_post)));
+
+ 		$this->vpt->hide_post_id = TRUE;
+ 		$this->assertFalse(in_array('post-' . $GLOBALS['post']->ID, $this->vpt->vpt_post_class($wp_classes_post)));
+ 	}
+ 		
+ 	/**
+	 * test the plugin's get_category_slug
+	 *
+	 *
+	 * @access public
+	 *
+	 * @return void
+	 */	
  	function test_get_category_slug()
  	{
  		$test_content = 'a test content with keyword - `'. $this->keyword_tag .'`';
