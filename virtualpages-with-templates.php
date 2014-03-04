@@ -484,6 +484,8 @@ if (!class_exists('VirtualPagesTemplates'))
 			if (isset($this->options['page_template']))
 			{
 				$this->template = get_post($this->options['page_template']);      
+				if (empty($this->template))
+					return;
 				
 				$this->template_content = $this->template->post_content;
 
