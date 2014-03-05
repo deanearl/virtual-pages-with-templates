@@ -382,8 +382,20 @@ if (!class_exists('VirtualPagesTemplates'))
             $virtual_url = str_replace('%postname%', $this->keyword, $virtualpageurl_trimmed);
 
             $virtual_url = str_replace('%category%', $this->category_slug, $virtual_url);
+            //$wp_rewrite->permalink_structure 
+            $num_posts = count($wp_query->posts);
+            $allow_virtual = FALSE;
             
-            if ($virtual_url == $current_url_trimmed && (count($wp_query->posts) == 0 || (isset($wp_query->query['error']) && $wp_query->query['error'] == '404')) ) 
+            if (empty($wp_rewrite->permalink_structure) && empty($wp->query_vars) && !isset($wp_query->post))
+            {	
+				$allow_virtual = TRUE;
+            }
+            elseif ($num_posts == 0)
+            {
+            	$allow_virtual = TRUE;
+            }
+            
+            if ($virtual_url == $current_url_trimmed && ($allow_virtual || (isset($wp_query->query['error']) && $wp_query->query['error'] == '404')) ) 
             {
             	if (!is_null($this->template))
             	{
@@ -497,10 +509,10 @@ if (!class_exists('VirtualPagesTemplates'))
 
 				$categories = get_the_category($this->template->ID);
 				$category = current($categories);
-
+				
 				if (!is_null($category) && is_object($category))
 	            {
-	            	$this->category_slug = $category->slug;
+	            	$this->category_slug = $this->get_category_slug($category);
 	            }
 	       		
 	       		$got_custom = FALSE;
