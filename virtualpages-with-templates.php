@@ -30,6 +30,8 @@ if (!class_exists('VirtualPagesTemplates'))
         public $hide_post_id = FALSE;
         private $is_virtual_page = FALSE;
 
+        private $blog_path = '/';
+
         const ERR_URL = 1;
         const ERR_TEMPLATE = 2;
         const ERR_CATEGORY = 3;
@@ -174,7 +176,7 @@ if (!class_exists('VirtualPagesTemplates'))
 	  	public function virtual_page_redirect() {
 		    if (is_search()) {
 		        global $wp_query;
-
+		        
 		        if ($this->options['affect_search'] )
 		        {
 		        	if (count($wp_query->posts) == 0  || !is_null($this->is_virtual_page()) && $wp_query->post->ID == $this->template->ID)
@@ -185,10 +187,12 @@ if (!class_exists('VirtualPagesTemplates'))
 				        }
 
 			        	if (strpos($structure, '%postname%')){
+			        		$structure = rtrim( $this->get_blog_path(), '/').$structure;
 			        		$structure = str_replace('%postname%', $wp_query->query['s'] , $structure) ;
 			        		$structure = str_replace('%category%', $this->category_slug , $structure) ;
 			        		wp_redirect( $structure );
 			        	}
+
 			        }	
 		        }
 		    }
@@ -344,7 +348,7 @@ if (!class_exists('VirtualPagesTemplates'))
 		*/
 		public function create_virtual($posts)
 		{
-               global $wp,$wp_query, $wp_rewrite;
+            global $wp,$wp_query, $wp_rewrite;
 
             $this->options = get_option('vpt_options');
 
@@ -366,7 +370,9 @@ if (!class_exists('VirtualPagesTemplates'))
             }
 
             // trim slashes
-            $virtualpageurl_trimmed = trim($virtualpageurl, '/');
+            $virtualpageurl_trimmed = ltrim($this->get_blog_path(), '/').trim($virtualpageurl, '/');
+            
+
             $current_url_trimmed = trim($current_url, '/');
 
             // get the template details
@@ -376,8 +382,20 @@ if (!class_exists('VirtualPagesTemplates'))
             $virtual_url = str_replace('%postname%', $this->keyword, $virtualpageurl_trimmed);
 
             $virtual_url = str_replace('%category%', $this->category_slug, $virtual_url);
+            //$wp_rewrite->permalink_structure 
+            $num_posts = count($wp_query->posts);
+            $allow_virtual = FALSE;
             
-            if ($virtual_url == $current_url_trimmed && (count($wp_query->posts) == 0 || (isset($wp_query->query['error']) && $wp_query->query['error'] == '404')) ) 
+            if (empty($wp_rewrite->permalink_structure) && empty($wp->query_vars) && !isset($wp_query->post))
+            {	
+				$allow_virtual = TRUE;
+            }
+            elseif ($num_posts == 0)
+            {
+            	$allow_virtual = TRUE;
+            }
+            
+            if ($virtual_url == $current_url_trimmed && ($allow_virtual || (isset($wp_query->query['error']) && $wp_query->query['error'] == '404')) ) 
             {
             	if (!is_null($this->template))
             	{
@@ -491,10 +509,10 @@ if (!class_exists('VirtualPagesTemplates'))
 
 				$categories = get_the_category($this->template->ID);
 				$category = current($categories);
-
+				
 				if (!is_null($category) && is_object($category))
 	            {
-	            	$this->category_slug = $category->slug;
+	            	$this->category_slug = $this->get_category_slug($category);
 	            }
 	       		
 	       		$got_custom = FALSE;
@@ -639,6 +657,36 @@ if (!class_exists('VirtualPagesTemplates'))
         	return rtrim($category_slug, '/');
 		}
 
+
+		/**
+		* gets the current blog's path
+		* 
+		*
+		* @access public 
+		* @param BOOL $get_new
+		* @return string $blog_path
+		*/
+		public function get_blog_path()
+		{
+			if (function_exists('get_current_blog_id') && function_exists('get_blog_details'))
+			{
+				$this->blog_path = get_blog_details( get_current_blog_id())->path;
+			}
+			
+			return $this->blog_path;
+		}
+
+		/**
+		* sets the current blog's path
+		* 
+		*
+		* @access public 
+		* @return void
+		*/
+		public function set_blog_path($blog_path = '/')
+		{
+			$this->blog_path = $blog_path;
+		}
 
 		/**
 		 * Include required admin files.
