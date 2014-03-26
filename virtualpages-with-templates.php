@@ -176,10 +176,10 @@ if (!class_exists('VirtualPagesTemplates'))
 	  	public function virtual_page_redirect() {
 		    if (is_search()) {
 		        global $wp_query;
-		        
-		        if ($this->options['affect_search'] )
+
+		        if (!empty($this->options) && isset($this->options['affect_search']) && $this->options['affect_search'] )
 		        {
-		        	if (count($wp_query->posts) == 0  || !is_null($this->is_virtual_page()) && $wp_query->post->ID == $this->template->ID)
+		        	if ((isset($wp_query->posts) && count($wp_query->posts) == 0)  || !is_null($this->is_virtual_page()) && $wp_query->post->ID == $this->template->ID)
 		        	{
 		        		$structure = $this->permalink_structure;
 			        	if ($this->use_custom_permalink){
