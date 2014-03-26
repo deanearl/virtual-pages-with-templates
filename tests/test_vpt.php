@@ -593,6 +593,32 @@ class WP_Test_Vpt extends WP_UnitTestCase
 	 	$this->assertEquals($this->test_vpt_category_slug.'/'.$this->test_vpt_category_slug.'-child', $this->vpt->get_category_slug($this->test_vpt_category_slug.'-child'));
 	 	$this->assertEquals($this->test_vpt_category_slug.'/'.$this->test_vpt_category_slug.'-child'.'/'.$this->test_vpt_category_slug.'-child-child', $this->vpt->get_category_slug($this->test_vpt_category_slug.'-child-child'));
  	}
+
+ 	/**
+	 * test the plugin's get_post_title
+	 *
+	 *
+	 * @access public
+	 *
+	 * @return void
+	 */	
+ 	function test_get_post_title()
+ 	{
+ 		$this->vpt->keyword = 'KEYWORD on the Planet';
+ 		// the page title should be the value of the %vpt-keyword%
+ 		$id = $this->factory->post->create(array('post_title' => 'virtual page', 'post_content' => ''));
+		$this->vpt->template = get_post($id);
+
+		$post_title = $this->vpt->get_post_title();
+		$this->assertEquals($this->vpt->keyword, $post_title);
+
+		// page title should be the templates page_title with %vpt-keyword% equal to the current keyword
+		$id = $this->factory->post->create(array('post_title' => 'The best %vpt-keyword%', 'post_content' => ''));
+		$this->vpt->template = get_post($id);
+
+		$post_title = $this->vpt->get_post_title();
+		$this->assertEquals('The best ' . $this->vpt->keyword, $post_title);		
+ 	}
  	
  	/**
  	 * sets the current user as the admin / temporarily overrides the current user
