@@ -477,8 +477,8 @@ if (!class_exists('VirtualPagesTemplates'))
 	            	
 	                $post->post_name = $wp->request;
 	               	//$post->guid = get_home_url('/' . $this->keyword);
-	             
-	                $post->post_title = $this->keyword;
+	               	
+	                $post->post_title = $this->get_post_title($this->keyword);
 	                //put your custom content here
 	                $post->post_content = str_replace('%vpt-keyword%', $this->keyword, $this->template_content);
 
@@ -542,6 +542,26 @@ if (!class_exists('VirtualPagesTemplates'))
 
             return $posts;
             }
+
+        /**
+		* get_post_title
+		* 
+		* use the template's page_title when %vpt-keyword% is in it, otherwise its value would be the current keyword
+		* example: if the template's page title is : `The best %vpt-keyword%` and the keyword is `KEYWORD`, the page's page title would be `The best KEYWORD`
+		*			if the template's page title is : `Some title` and the keyword is `KEYWORD`, the page's page title would be `KEYWORD`
+		*
+		* @access public 
+		* @param array $classes
+		* @return arrat $classes
+		*/
+        public function get_post_title(){
+        	$post_title = $this->keyword;
+           	if (strpos($this->template->post_title, '%vpt-keyword%'))
+           	{
+           		$post_title = str_replace('%vpt-keyword%', $this->keyword, $this->template->post_title);
+           	}
+           	return $post_title;
+        }
             
 		/**
 		* add_uncategorized_class
