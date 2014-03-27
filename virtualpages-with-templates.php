@@ -55,6 +55,9 @@ if (!class_exists('VirtualPagesTemplates'))
 
 				add_action('wp_head', array($this,'buffer_start'));
 				add_action('wp_footer', array($this,'buffer_end'));
+
+
+				add_filter('user_trailingslashit', array($this, 'fix_trailing_slash'), 9999,2);
 			}else{
 				add_action( 'admin_menu', array($this, 'display_menu') );
 				register_uninstall_hook(__FILE__, array('VirtualPagesTemplates','vpt_uninstall_plugin'));
@@ -64,6 +67,53 @@ if (!class_exists('VirtualPagesTemplates'))
 			$this->permalink_structure = get_option('permalink_structure');
 	  	}
 
+	  	/**
+		* fix_trailing_slash
+		* 
+		* adds / removes the trailing slash on virtual pages depending on to what is set on the virtual page custom permalink
+		* overrides the WP permalink settings, where automatically removes / adds trailing slashes depending on the WP permalink
+		*
+		* @access public 
+		* @param string $s the string url
+		* @return $s
+		*/
+	  	public function fix_trailing_slash($s=''){
+	  		
+	  		if ($this->is_virtual_page())
+	  		{	
+	  			if ($this->use_custom_permalink && !empty($this->options))
+	  			{
+	  				$revvurl = strrev($this->options['virtualpageurl']);
+	  				$rev_s = strrev($s);
+	  				if ($revvurl){
+	  					if ($revvurl{0} == '/' && $rev_s{0} != '/')
+		  				{
+		  					return $s . '/';		
+		  				}
+		  				// remove slash if the custom permalink doesn't have a trailing slash
+		  				elseif ($revvurl{0} != '/' && $rev_s{0} == '/')
+		  				{
+		  					return substr($s, 0, -1);
+		  				}
+		  				// use as it is
+		  				else
+		  				{
+		  					return $s;
+		  				}	
+	  				}
+	  				else{
+	  					return $s;
+	  				}
+	  				// add slash if the custom permalink has slash
+	  				
+	  			}else{
+	  				return $s;
+	  			}
+	  			
+	  		}else{
+	  			return $s;
+	  		}
+	  	}
 	  	/**
 		 * overrides the WP rel_canonical - use the correct canonical tags for virtual pages
 		 *
@@ -85,7 +135,23 @@ if (!class_exists('VirtualPagesTemplates'))
 				$link = str_replace('%pagename%', get_page_uri( $GLOBALS['post'] ), $link);
 
 				$link = home_url($link);
-				$link = user_trailingslashit($link, $GLOBALS['post']->post_type);
+				$revvurl = strrev($this->options['virtualpageurl']);
+				$revlink = strrev($link);
+				if ($revvurl)
+				{
+					// add slash if the custom permalink has slash
+	  				if ($revvurl{0} == '/' && $revlink{0} != '/')
+	  				{
+	  					$link = $link . '/';		
+	  				}
+	  				// remove slash if the custom permalink doesn't have a trailing slash
+	  				elseif ($revvurl{0} != '/' && $revlink{0} == '/')
+	  				{
+	  					$link = substr($link, 0, -1);
+	  				}	
+				}
+			
+				//$link = user_trailingslashit($link, $GLOBALS['post']->post_type);
 			}else
 				$link = get_permalink( $id );
 
@@ -176,10 +242,10 @@ if (!class_exists('VirtualPagesTemplates'))
 	  	public function virtual_page_redirect() {
 		    if (is_search()) {
 		        global $wp_query;
-		        
-		        if ($this->options['affect_search'] )
+
+		        if (!empty($this->options) && isset($this->options['affect_search']) && $this->options['affect_search'] && (!is_null($this->template) && $this->template->ID))
 		        {
-		        	if (count($wp_query->posts) == 0  || !is_null($this->is_virtual_page()) && $wp_query->post->ID == $this->template->ID)
+		        	if ((isset($wp_query->posts) && count($wp_query->posts) == 0)  || !is_null($this->is_virtual_page()) && $wp_query->post->ID == $this->template->ID)
 		        	{
 		        		$structure = $this->permalink_structure;
 			        	if ($this->use_custom_permalink){
@@ -187,9 +253,14 @@ if (!class_exists('VirtualPagesTemplates'))
 				        }
 
 			        	if (strpos($structure, '%postname%')){
+
 			        		$structure = rtrim( $this->get_blog_path(), '/').$structure;
 			        		$structure = str_replace('%postname%', $wp_query->query['s'] , $structure) ;
-			        		$structure = str_replace('%category%', $this->category_slug , $structure) ;
+			        		if (!is_null($this->category_slug))
+			        			$structure = str_replace('%category%', $this->category_slug , $structure) ;
+			        		else
+			        			$structure = str_replace('%category%', 'uncategorized' , $structure) ;
+
 			        		wp_redirect( $structure );
 			        	}
 
@@ -394,11 +465,11 @@ if (!class_exists('VirtualPagesTemplates'))
             {
             	$allow_virtual = TRUE;
             }
-            
+           
             if ($virtual_url == $current_url_trimmed && ($allow_virtual || (isset($wp_query->query['error']) && $wp_query->query['error'] == '404')) ) 
             {
             	if (!is_null($this->template))
-            	{
+            	{ 
             		$this->set_is_virtual_page( TRUE );
 
 	            	$this->keyword = str_replace('-', ' ', $this->keyword);
