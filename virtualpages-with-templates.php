@@ -85,21 +85,27 @@ if (!class_exists('VirtualPagesTemplates'))
 	  			{
 	  				$revvurl = strrev($this->options['virtualpageurl']);
 	  				$rev_s = strrev($s);
-	  				// add slash if the custom permalink has slash
-	  				if ($revvurl{0} == '/' && $rev_s{0} != '/')
-	  				{
-	  					return $s . '/';		
+	  				if ($revvurl){
+	  					if ($revvurl{0} == '/' && $rev_s{0} != '/')
+		  				{
+		  					return $s . '/';		
+		  				}
+		  				// remove slash if the custom permalink doesn't have a trailing slash
+		  				elseif ($revvurl{0} != '/' && $rev_s{0} == '/')
+		  				{
+		  					return substr($s, 0, -1);
+		  				}
+		  				// use as it is
+		  				else
+		  				{
+		  					return $s;
+		  				}	
 	  				}
-	  				// remove slash if the custom permalink doesn't have a trailing slash
-	  				elseif ($revvurl{0} != '/' && $rev_s{0} == '/')
-	  				{
-	  					return substr($s, 0, -1);
-	  				}
-	  				// use as it is
-	  				else
-	  				{
+	  				else{
 	  					return $s;
 	  				}
+	  				// add slash if the custom permalink has slash
+	  				
 	  			}else{
 	  				return $s;
 	  			}
@@ -131,18 +137,20 @@ if (!class_exists('VirtualPagesTemplates'))
 				$link = home_url($link);
 				$revvurl = strrev($this->options['virtualpageurl']);
 				$revlink = strrev($link);
-				
-				// add slash if the custom permalink has slash
-  				if ($revvurl{0} == '/' && $revlink{0} != '/')
-  				{
-  					$link = $link . '/';		
-  				}
-  				// remove slash if the custom permalink doesn't have a trailing slash
-  				elseif ($revvurl{0} != '/' && $revlink{0} == '/')
-  				{
-  					$link = substr($link, 0, -1);
-  				}
-
+				if ($revvurl)
+				{
+					// add slash if the custom permalink has slash
+	  				if ($revvurl{0} == '/' && $revlink{0} != '/')
+	  				{
+	  					$link = $link . '/';		
+	  				}
+	  				// remove slash if the custom permalink doesn't have a trailing slash
+	  				elseif ($revvurl{0} != '/' && $revlink{0} == '/')
+	  				{
+	  					$link = substr($link, 0, -1);
+	  				}	
+				}
+			
 				//$link = user_trailingslashit($link, $GLOBALS['post']->post_type);
 			}else
 				$link = get_permalink( $id );
@@ -235,7 +243,7 @@ if (!class_exists('VirtualPagesTemplates'))
 		    if (is_search()) {
 		        global $wp_query;
 
-		        if (!empty($this->options) && isset($this->options['affect_search']) && $this->options['affect_search'] )
+		        if (!empty($this->options) && isset($this->options['affect_search']) && $this->options['affect_search'] && (!is_null($this->template) && $this->template->ID))
 		        {
 		        	if ((isset($wp_query->posts) && count($wp_query->posts) == 0)  || !is_null($this->is_virtual_page()) && $wp_query->post->ID == $this->template->ID)
 		        	{
@@ -245,9 +253,14 @@ if (!class_exists('VirtualPagesTemplates'))
 				        }
 
 			        	if (strpos($structure, '%postname%')){
+
 			        		$structure = rtrim( $this->get_blog_path(), '/').$structure;
 			        		$structure = str_replace('%postname%', $wp_query->query['s'] , $structure) ;
-			        		$structure = str_replace('%category%', $this->category_slug , $structure) ;
+			        		if (!is_null($this->category_slug))
+			        			$structure = str_replace('%category%', $this->category_slug , $structure) ;
+			        		else
+			        			$structure = str_replace('%category%', 'uncategorized' , $structure) ;
+
 			        		wp_redirect( $structure );
 			        	}
 
