@@ -418,7 +418,16 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		$post->post_name = '/testing/' . $post->post_name;
  		
  		$expected_canonical = "<link rel='canonical' href='{$expected_url}' />\n"; 
- 		$canonical_link = $this->get_vpt_rel_canonical();
+ 		$canonical_link = $this->get_vpt_rel_canonical('/testing/%postname%/');
+
+ 		$this->assertNotEquals($expected_canonical, $canonical_link);
+
+ 		$post->guid = 'http://example.org/';
+ 		$expected_url = $post->guid . 'testing/' . $post->post_name . '/';
+ 		$post->post_name = '/testing/' . $post->post_name .'/';
+ 		
+ 		$expected_canonical = "<link rel='canonical' href='{$expected_url}' />\n"; 
+ 		$canonical_link = $this->get_vpt_rel_canonical('/testing/%postname%/');
 
  		$this->assertEquals($expected_canonical, $canonical_link);
  	}
@@ -430,9 +439,10 @@ class WP_Test_Vpt extends WP_UnitTestCase
 	 *
 	 * @return string
 	 */
- 	private function get_vpt_rel_canonical()
+ 	private function get_vpt_rel_canonical($virtualpageurl = '/testing/%postname%/')
  	{
  		ob_start();
+ 		$this->vpt->options = array('virtualpageurl' => $virtualpageurl);
  		$this->vpt->vpt_rel_canonical();
  		$canonical_link = ob_get_contents();
  		ob_end_clean();
@@ -592,6 +602,52 @@ class WP_Test_Vpt extends WP_UnitTestCase
 	 	$this->assertEquals($this->test_vpt_category_slug.'2', $this->vpt->get_category_slug($this->test_vpt_category_slug.'2'));
 	 	$this->assertEquals($this->test_vpt_category_slug.'/'.$this->test_vpt_category_slug.'-child', $this->vpt->get_category_slug($this->test_vpt_category_slug.'-child'));
 	 	$this->assertEquals($this->test_vpt_category_slug.'/'.$this->test_vpt_category_slug.'-child'.'/'.$this->test_vpt_category_slug.'-child-child', $this->vpt->get_category_slug($this->test_vpt_category_slug.'-child-child'));
+ 	}
+
+ 	/**
+	 * test the plugin's fix_trailing_slash
+	 *
+	 *
+	 * @access public
+	 *
+	 * @return void
+	 */	
+ 	function test_fix_trailing_slash()
+ 	{
+ 		$this->vpt->set_is_virtual_page(TRUE);
+ 		$this->vpt->use_custom_permalink = TRUE;
+
+ 		// should add trailing slash
+ 		$this->vpt->options = array('virtualpageurl' => '/testing/%postname%/');
+ 		$url = $this->vpt->fix_trailing_slash('/some_url');
+ 		$rev_url = strrev($url);
+ 		$this->assertEquals($rev_url{0}, '/');
+
+ 		// should remove trailing slash
+ 		$this->vpt->options = array('virtualpageurl' => '/testing/%postname%');
+ 		$url = $this->vpt->fix_trailing_slash('/some_url');
+ 		$rev_url = strrev($url);
+ 		$this->assertNotEquals($rev_url{0}, '/');
+
+ 		// should remove trailing slash
+ 		$this->vpt->options = array('virtualpageurl' => '/testing/%postname%');
+ 		$url = $this->vpt->fix_trailing_slash('/some_url/');
+ 		$rev_url = strrev($url);
+ 		$this->assertNotEquals($rev_url{0}, '/');
+
+ 		// should be as it is
+ 		$this->vpt->use_custom_permalink = FALSE;
+ 		$this->vpt->options = array('virtualpageurl' => '/testing/%postname%');
+ 		$url = $this->vpt->fix_trailing_slash('/some_url/');
+ 		$rev_url = strrev($url);
+ 		$this->assertEquals($rev_url{0}, '/');
+
+ 		// should be as it is
+ 		$this->vpt->set_is_virtual_page(FALSE);
+ 		$this->vpt->use_custom_permalink = TRUE;
+ 		$url = $this->vpt->fix_trailing_slash('/some_url/');
+ 		$rev_url = strrev($url);
+ 		$this->assertEquals($rev_url{0}, '/');
  	}
  	
  	/**
