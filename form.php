@@ -4,15 +4,20 @@
     <?php 
     $options = get_option('vpt_options');
     $virtualpageurl = '/shop/%postname%';
+    $vpt_default_keyword = 'Ipad 3 Mini';
     $page_template = null;
     $use_custom_permalink_structure = FALSE;
     $affect_search = TRUE;
+    $hide_post_id = FALSE;
 
     if (!empty($options)){
         $virtualpageurl = $options['virtualpageurl'];
+        $vpt_default_keyword = $options['vpt_keyword'];
         $page_template = $options['page_template'];
         $use_custom_permalink_structure = $options['use_custom_permalink_structure'];
         $affect_search = $options['affect_search'];
+
+        $hide_post_id = (isset($options['hide_post_id']) ? $options['hide_post_id'] : FALSE);
     }
 
     $posts = new WP_Query( array( 'post_status' => array('draft'), 'post_type' => array('post') ) );
@@ -38,6 +43,14 @@
         <p>
             <strong>
                 Page template is required. You can make a template by creating a <a href="<?php echo admin_url('post-new.php')?>">post</a> or a <a href="<?php echo admin_url('post-new.php?post_type=page')?>">page</a> as save it as draft.
+            </strong>
+        </p>
+    </div>
+
+    <div class="error has-category-error hidden">
+        <p>
+            <strong>
+                The `%category%` tag will not work on pages.
             </strong>
         </p>
     </div>
@@ -86,13 +99,28 @@
                 <p class="description">Specify an existing post or page (one that isn’t published) that will be used as a template.</p>
                 </td>
             </tr>
-   
+            <tr valign="top">
+            <th scope="row"><label for="default_role"><?php _e('Default Keyword: ' ); ?></label></th>
+                <td>
+                <input type="text" class="regular-text code" value="<?php echo $vpt_default_keyword?>" id="virtualpageurl" name="vpt_keyword"/>
+                <p class="description">Set default keyword for virtual pages template</p>
+                </td>
+            </tr>
             <tr valign="top">
             <th scope="row"><?php _e('Affect search result ' ); ?></th>
             <td>
                 <?php if ($affect_search) $checked = 'checked="checked"'; else $checked = '';?>
                <label for="affect_search"><input type="checkbox" value="1" id="affect_search" <?php echo $checked;?> name="affect_search"></label>
                <p class="description">Generate virtual page using the searched keyword if there are no pages found</p>
+            </td>
+            </tr>
+
+            <tr valign="top">
+            <th scope="row"><?php _e('Hide ID' ); ?></th>
+            <td>
+                <?php if ($hide_post_id) $checked = 'checked="checked"'; else $checked = '';?>
+               <label for="hide_post_id"><input type="checkbox" value="1" id="hide_post_id" <?php echo $checked;?> name="hide_post_id"></label>
+               <p class="description">Hides the post/page id from the virtual page</p>
             </td>
             </tr>
             </tbody>
