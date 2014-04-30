@@ -254,6 +254,9 @@ if (!class_exists('VirtualPagesTemplates'))
 
 			        	if (strpos($structure, '%postname%')){
 
+			        		//seo search conversion for affect_search keywords
+			        		$wp_query->query['s'] = $this->seoUrl($wp_query->query['s']);
+
 			        		$structure = rtrim( $this->get_blog_path(), '/').$structure;
 			        		$structure = str_replace('%postname%', $wp_query->query['s'] , $structure) ;
 			        		if (!is_null($this->category_slug))
@@ -267,6 +270,27 @@ if (!class_exists('VirtualPagesTemplates'))
 			        }	
 		        }
 		    }
+		}
+
+		/**
+		* seoUrl
+		* 
+		* Convert a string to seo friendly string
+		*
+		* @access public 
+		* @return string
+		*/
+
+		public function seoUrl($string) {
+		    //Lower case everything
+		    $string = strtolower($string);
+		    //Make alphanumeric (removes all other characters)
+		    $string = preg_replace("/[^a-z0-9_\s-]/", "", $string);
+		    //Clean up multiple dashes or whitespaces
+		    $string = preg_replace("/[\s-]+/", " ", $string);
+		    //Convert whitespaces and underscore to dash
+		    $string = preg_replace("/[\s_]/", "-", $string);
+		    return $string;
 		}
 
 	  	/**
