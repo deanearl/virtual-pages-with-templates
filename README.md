@@ -1,6 +1,6 @@
 # Virtual Pages with Templates
 
-This is an initial plugin for displaying virtual pages which can use a template for selecting the contents.
+This is an initial WordPress plugin for displaying virtual pages which can use a template for selecting the contents.
 
 **Warning: This plugin is still in beta**
 
@@ -27,5 +27,6 @@ Welcome to this website please find the products about <strong>%vpt-keyword%</st
 4. goto `Settings` > `Permalinks` - (optional), e.g. `/shop/%postname%/`
 4. In the admin panel, open - `Virtual Page Settings`
 5. update to your desired settings.
+
 ## Contributors
 [@deanearlbartolabac](https://github.com/deanearlbartolabac)
