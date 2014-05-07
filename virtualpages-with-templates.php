@@ -78,11 +78,12 @@ if (!class_exists('VirtualPagesTemplates'))
 		*/
 	  	public function replace_widget_keywords($widget)
 	  	{
-	  		array_walk_recursive($widget, function(&$value, $key){
+	  		$keyword = str_replace('-', ' ', $this->keyword);
+	  		array_walk_recursive($widget, function(&$value, $key) use ($keyword){
 		        // Don't alter non-strings or empty ones
 		        if(!is_string($value) or empty($value)) return;
 		        // We found a string, replace stuff in it and return the altered value
-		        $value = str_replace('%vpt-keyword%', $this->keyword, $value);
+		        $value = str_replace('%vpt-keyword%', $keyword, $value);
 		    });
 		    // Return the possible altered $instance array
 		    return $widget;
