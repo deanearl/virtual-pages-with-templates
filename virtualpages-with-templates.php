@@ -417,6 +417,7 @@ if (!class_exists('VirtualPagesTemplates'))
             	if ($this->category_slug)
             		$virtualpageurl_trimmed = str_replace('%category%', $this->category_slug, $virtualpageurl_trimmed);
 
+            	$virtualpageurl_trimmed = str_replace('?', '\?', $virtualpageurl_trimmed);
             	$replacements_regex = array(
                 	'(?<postname>[^/]+)',
             	);
