@@ -807,7 +807,11 @@ if (!class_exists('VirtualPagesTemplates'))
 		{
 			if (function_exists('get_current_blog_id') && function_exists('get_blog_details'))
 			{
-				$this->blog_path = str_replace(get_bloginfo('wpurl'),'',get_bloginfo('url'));
+				if ( get_blog_details( get_current_blog_id())->domain == $_SERVER['HTTP_HOST'] ) {
+	 				$this->blog_path = get_blog_details( get_current_blog_id())->path;
+	 			} else {
+	 				$this->blog_path = str_replace(get_bloginfo('wpurl'),'',get_bloginfo('url'));
+	 			}
 			}
 			
 			return $this->blog_path;
