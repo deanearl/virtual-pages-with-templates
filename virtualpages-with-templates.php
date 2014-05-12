@@ -806,12 +806,8 @@ if (!class_exists('VirtualPagesTemplates'))
 		public function get_blog_path()
 		{
 			if (function_exists('get_current_blog_id') && function_exists('get_blog_details'))
-			{
-				if ( get_blog_details( get_current_blog_id())->domain == $_SERVER['HTTP_HOST'] ) {
-	 				$this->blog_path = get_blog_details( get_current_blog_id())->path;
-	 			} else {
-	 				$this->blog_path = str_replace(get_bloginfo('wpurl'),'',get_bloginfo('url'));
-	 			}
+			{	
+				$this->blog_path = str_replace('http://'.$_SERVER['HTTP_HOST'], '', site_url()) . '/';
 			}
 			
 			return $this->blog_path;
