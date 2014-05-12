@@ -806,8 +806,8 @@ if (!class_exists('VirtualPagesTemplates'))
 		public function get_blog_path()
 		{
 			if (function_exists('get_current_blog_id') && function_exists('get_blog_details'))
-			{
-				$this->blog_path = get_blog_details( get_current_blog_id())->path;
+			{	
+				$this->blog_path = str_replace('http://'.$_SERVER['HTTP_HOST'], '', site_url()) . '/';
 			}
 			
 			return $this->blog_path;
