@@ -56,6 +56,7 @@ if (!class_exists('VirtualPagesTemplates'))
 				add_action('wp_head', array($this,'buffer_start'));
 				add_action('wp_footer', array($this,'buffer_end'));
 
+				add_filter('widget_display_callback', array(&$this, 'replace_widget_keywords'));
 
 				add_filter('user_trailingslashit', array($this, 'fix_trailing_slash'), 9999,2);
 			}else{
@@ -65,6 +66,27 @@ if (!class_exists('VirtualPagesTemplates'))
 			}
 			
 			$this->permalink_structure = get_option('permalink_structure');
+	  	}
+
+	  	/**
+		* allow use of %vpt-keyword% in sidebar widget
+		* 
+		*
+		* @access public 
+		* @param array $widget
+		* @return $widget
+		*/
+	  	public function replace_widget_keywords($widget)
+	  	{
+	  		$keyword = str_replace('-', ' ', $this->keyword);
+	  		array_walk_recursive($widget, function(&$value, $key) use ($keyword){
+		        // Don't alter non-strings or empty ones
+		        if(!is_string($value) or empty($value)) return;
+		        // We found a string, replace stuff in it and return the altered value
+		        $value = str_replace('%vpt-keyword%', $keyword, $value);
+		    });
+		    // Return the possible altered $instance array
+		    return $widget;
 	  	}
 
 	  	/**
@@ -785,8 +807,8 @@ if (!class_exists('VirtualPagesTemplates'))
 		public function get_blog_path()
 		{
 			if (function_exists('get_current_blog_id') && function_exists('get_blog_details'))
-			{
-				$this->blog_path = get_blog_details( get_current_blog_id())->path;
+			{	
+				$this->blog_path = str_replace('http://'.$_SERVER['HTTP_HOST'], '', site_url()) . '/';
 			}
 			
 			return $this->blog_path;
