@@ -196,6 +196,13 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		$this->vpt->init_keyword($current_url, $virtualpageurl);
  		
  		$this->assertEquals($this->test_vpt_keyword, $this->vpt->keyword);
+
+ 		// test using query string
+ 		$virtualpageurl = '/?q=%postname%&some=test';
+ 		$current_url = '/?q='. $this->test_vpt_keyword . '&some=test';
+ 		$this->vpt->init_keyword($current_url, $virtualpageurl);
+
+ 		$this->assertEquals($this->test_vpt_keyword, $this->vpt->keyword);
  	}
 
  	/**

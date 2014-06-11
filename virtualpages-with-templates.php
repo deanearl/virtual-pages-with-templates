@@ -439,6 +439,7 @@ if (!class_exists('VirtualPagesTemplates'))
             	if ($this->category_slug)
             		$virtualpageurl_trimmed = str_replace('%category%', $this->category_slug, $virtualpageurl_trimmed);
 
+            	$virtualpageurl_trimmed = str_replace('?', '\?', $virtualpageurl_trimmed);
             	$replacements_regex = array(
                 	'(?<postname>[^/]+)',
             	);
@@ -502,8 +503,8 @@ if (!class_exists('VirtualPagesTemplates'))
             //$wp_rewrite->permalink_structure 
             $num_posts = count($wp_query->posts);
             $allow_virtual = FALSE;
-            
-            if (empty($wp_rewrite->permalink_structure) && empty($wp->query_vars) && !isset($wp_query->post))
+            //empty($wp_rewrite->permalink_structure) && 
+            if (empty($wp->query_vars) && !isset($wp_query->post))
             {	
 				$allow_virtual = TRUE;
             }
@@ -511,7 +512,7 @@ if (!class_exists('VirtualPagesTemplates'))
             {
             	$allow_virtual = TRUE;
             }
-           
+            
             if ($virtual_url == $current_url_trimmed && ($allow_virtual || (isset($wp_query->query['error']) && $wp_query->query['error'] == '404')) ) 
             {
             	if (!is_null($this->template))
