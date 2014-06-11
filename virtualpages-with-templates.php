@@ -285,8 +285,9 @@ if (!class_exists('VirtualPagesTemplates'))
 			        			$structure = str_replace('%category%', $this->category_slug , $structure) ;
 			        		else
 			        			$structure = str_replace('%category%', 'uncategorized' , $structure) ;
-
-			        		wp_redirect( $structure );
+			        		$wp_query->is_search = FALSE;
+			        		if ($structure != $_SERVER['REQUEST_URI'] )
+			        			wp_redirect( $structure );
 			        	}
 
 			        }	
