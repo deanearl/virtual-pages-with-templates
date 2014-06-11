@@ -59,13 +59,46 @@ if (!class_exists('VirtualPagesTemplates'))
 				add_filter('widget_display_callback', array(&$this, 'replace_widget_keywords'));
 
 				add_filter('user_trailingslashit', array($this, 'fix_trailing_slash'), 9999,2);
+
+				add_filter('wp_get_nav_menu_items', array($this, 'custom_nav_items'));
 			}else{
 				add_action( 'admin_menu', array($this, 'display_menu') );
+				
 				register_uninstall_hook(__FILE__, array('VirtualPagesTemplates','vpt_uninstall_plugin'));
 
 			}
 			
 			$this->permalink_structure = get_option('permalink_structure');
+	  	}
+
+	  	/**
+		* custom_nav_items
+		* 
+		* Updates the menu items with virtual urls if URL specified is either one of the folowing (`http://*`, `/*`, `*`)
+		*
+		* @access public 
+		* @param object $items
+		* @return $items
+		*/
+	  	public function custom_nav_items($items){
+	  		$structure = $this->options['virtualpageurl'];
+	  		foreach ($items as $item)
+	  		{
+	  			if ($item->url == 'http://*' || $item->url == '/*' || $item->url == '*')
+				{
+					
+					$url = strtolower(str_replace(array(" ","\"","/"),array("-","","-"),$item->title));
+
+	  				$url = str_replace('%postname%', $url, $structure);
+
+	  				$url = rtrim($this->get_blog_path(), '/') . $url;
+
+	  				$item->url = $url;
+				}
+	  		}
+
+	  		return $items;
+	  		
 	  	}
 
 	  	/**
