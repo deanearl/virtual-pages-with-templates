@@ -28,5 +28,11 @@ Welcome to this website please find the products about <strong>%vpt-keyword%</st
 4. In the admin panel, open - `Virtual Page Settings`
 5. update to your desired settings.
 
+## Menu
+- adding custom menus that will redirect to a virtual page, it will still be done as normal - `Appearance > Menu`
+There are two ways with which you can add a virtual page:
+1. Using the links metabox `Appearance > Menus > Links`. The value in the url field should either be http://*, /*, or *.
+2. Using `Appearance > Menus > Virtual Page`, Just add the titles (separated by a new line) and it will add the menu items in bulk to the menu structure.
+
 ## Contributors
 [@deanearlbartolabac](https://github.com/deanearlbartolabac)
