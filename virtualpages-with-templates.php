@@ -63,6 +63,9 @@ if (!class_exists('VirtualPagesTemplates'))
 				add_filter('wp_get_nav_menu_items', array($this, 'custom_nav_items'));
 			}else{
 				add_action( 'admin_menu', array($this, 'display_menu') );
+
+				add_action('admin_print_scripts', array($this,'loadJS'));
+				add_action('admin_head-nav-menus.php', array($this, 'vpt_metabox' ));
 				
 				register_uninstall_hook(__FILE__, array('VirtualPagesTemplates','vpt_uninstall_plugin'));
 
@@ -70,6 +73,44 @@ if (!class_exists('VirtualPagesTemplates'))
 			
 			$this->permalink_structure = get_option('permalink_structure');
 	  	}
+
+	  	function vpt_metabox() {
+			add_meta_box( 'vpt-menu-metabox', 'Virtual Pages', array($this, 'vpt_render_menu_metabox'), 'nav-menus', 'side', 'high', $custom_param );
+
+		}
+
+		function vpt_render_menu_metabox( $object, $args ) {
+			global $_nav_menu_placeholder, $nav_menu_selected_id;
+
+			$_nav_menu_placeholder = 0 > $_nav_menu_placeholder ? $_nav_menu_placeholder - 1 : -1;
+
+			?>
+			<div class="customlinkdivVpt" id="customlinkdivVpt">
+				<input type="hidden" value="custom" name="vpt-menu-item[<?php echo $_nav_menu_placeholder; ?>][vpt-menu-item-type]" />
+					
+				<input id="custom-vpt-menu-item-url" name="vpt-menu-item[<?php echo $_nav_menu_placeholder; ?>][vpt-menu-item-url]" type="hidden" value="*" />
+				<input id="custom-vpt-menu-item-custom-type" name="vpt-menu-item[<?php echo $_nav_menu_placeholder; ?>][vpt-menu-item-custom-type]" type="hidden" />	
+
+				<p id="menu-item-name-wrap">
+					<label class="howto" for="custom-vpt-menu-item-titles">
+						<span><?php _e( 'Titles' ); ?></span>
+						
+						<textarea rows="8" id="custom-vpt-menu-item-titles" name="vpt-menu-item[<?php echo $_nav_menu_placeholder; ?>][vpt-menu-item-titles]" class="regular-text vpt-menu-item-textbox input-with-default-title" title="<?php esc_attr_e('Titles'); ?>" style = "margin-left:40px;width:180px;">
+						</textarea>
+						<span>* separate Titles using a new line.</span>
+					</label>
+				</p>
+
+				<p class="button-controls">
+					<span class="add-to-menu">
+						<input type="submit"<?php wp_nav_menu_disabled_check( $nav_menu_selected_id ); ?> class="button-secondary submit-add-to-menu right" value="<?php esc_attr_e('Add to Menu'); ?>" name="add-custom-vpt-menu-item" id="submit-customlinkdivVpt" />
+						<span class="spinner"></span>
+					</span>
+				</p>
+
+			</div><!-- /.customlinkdivVpt -->
+			<?php
+		}
 
 	  	/**
 		* custom_nav_items
@@ -917,6 +958,20 @@ if (!class_exists('VirtualPagesTemplates'))
 		public function set_is_virtual_page($is_virtual_page = FALSE)
 		{
 			$this->is_virtual_page = $is_virtual_page;
+		}
+
+		/**
+		* loads the JS files (admin)
+		* 
+		*
+		* @access public 
+		* @return void
+		*/
+		public function loadJS()
+		{
+
+			wp_register_script( 'vpt.metabox.js', plugins_url( '/js/metabox.js' , __FILE__ ));
+			wp_enqueue_script( 'vpt.metabox.js' );
 		}
 
 	}	
