@@ -71,7 +71,7 @@ var vptNavMenu;
 			callback = callback || function(){};
 
 			menu_items = new Array();
-			$.each(params.titles.split("\n").reverse(), function(k,v){
+			$.each(params.titles.split("\n"), function(k,v){
 				v = $.trim(v);
 				menu_items.push({'menu-item-type':'custom', 'menu-item-url':params.url, 'menu-item-title':v, 'menu-item-custom': 'vpt'}); 
 			});
