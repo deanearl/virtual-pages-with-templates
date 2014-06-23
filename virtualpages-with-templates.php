@@ -122,7 +122,10 @@ if (!class_exists('VirtualPagesTemplates'))
 		* @return $items
 		*/
 	  	public function custom_nav_items($items){
-	  		$structure = $this->options['virtualpageurl'];
+	  		$structure = $this->permalink_structure;
+        	if ($this->use_custom_permalink){
+        		$structure = $this->options['virtualpageurl'];
+	        }
 	  		foreach ($items as $item)
 	  		{
 	  			if ($item->url == 'http://*' || $item->url == '/*' || $item->url == '*')
