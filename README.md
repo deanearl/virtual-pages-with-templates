@@ -4,6 +4,8 @@ This is an initial WordPress plugin for displaying virtual pages which can use a
 
 **Warning: This plugin is still in beta**
 
+[![Build Status](https://travis-ci.org/Link7/virtual-pages-with-templates.svg?branch=master)](https://travis-ci.org/Link7/virtual-pages-with-templates)
+
 ## Installation
 1. Copy the plugin directory into your `wp-content/plugins` directory
 2. Navigate to the *Plugins* dashboard page
