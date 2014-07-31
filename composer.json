@@ -1,0 +1,6 @@
+{
+  "name": "link7/virtual-pages-with-templates",
+  "type": "wordpress-plugin",
+  "description": "A WordPress plugin for displaying virtual pages which can use a template for selecting the contents.",
+  "license": "GPL-3.0+"
+}
