@@ -723,34 +723,7 @@ if (!class_exists('VirtualPagesTemplates'))
 				
 				$this->template_content = $this->template->post_content;
 
-				$categories = get_the_category($this->template->ID);
-				$category = current($categories);
-				
-				if (!is_null($category) && is_object($category))
-	            {
-	            	$this->category_slug = $this->get_category_slug($category);
-	            }
-	       		
-	       		$got_custom = FALSE;
-	            if (isset($wp_query->query['category_name']))
-	            {
-	            	$slug = $this->get_category_slug($wp_query->query['category_name']);
-	            	if ($slug)
-	            	{
-	            		$this->category_slug = $slug;
-	            		$got_custom = TRUE;
-	            	}
-	            }
-	            
-	            if (isset($wp_query->query['name']) && !$got_custom)
-	            {
-	            	$slug = $this->get_category_slug($wp_query->query['name']);
-	            	if ($slug)
-	            	{
-	            		$this->category_slug = $slug;
-	            		$got_custom = TRUE;
-	            	}
-	            }
+				$this->categories = get_the_category($this->template->ID);
 
 	            // can't get anything, directly read the URL
 	            if (!$got_custom )
@@ -818,59 +791,34 @@ if (!class_exists('VirtualPagesTemplates'))
 		*/
 		public function get_category_slug($path = NULL,  &$category_slug = NULL)
 		{
-			if (!is_object($path))
-			{
-				//if ($this->keyword)
-				//	$path = str_replace($this->keyword, '', $path);
-
-				$cat = get_category_by_path($path);
-	        	if (empty($cat))
-	        	{
-	        		$cat = get_category_by_slug($path);
-	        	}
-			}
-			else
-			{
-				$cat = $path;
-			}
-
-        	if (is_object($cat))
-			{
-				if (in_category($cat->term_id, $this->template->ID)){
-
-
-				    if ($cat->parent > 0)
-				    {
-				        $category_slug = $cat->slug.'/'.$category_slug;
-				        $this->get_category_slug(get_category($cat->parent), $category_slug);
-				    }
-				    else
-				    {
-				        if (!is_null($category_slug))
-							$category_slug = $cat->slug.'/'.$category_slug;
-				        else
-				            $category_slug = $cat->slug;
-				    }
-				}
-			}
+			$slug_string = NULL;
 			// explode the path and check vs all categories
-			if (is_null($category_slug) && !is_object($path)){
-				
-				$paths = explode('/', $path);
-				$paths = array_reverse($paths);
 
-				foreach($paths as $path){
-					$cat = get_category_by_slug($path);	
+			$paths = explode('/', $path);
+			$paths = array_reverse($paths);
 
-					if (!empty($cat) && is_object($cat))
-					{	
-						$this->get_category_slug($cat, $category_slug);
-						break;
-					}
+			
+			$categories = array();
+			foreach ($this->categories as $category)
+			{
+				$categories[$category->slug] = $category;
+			}
+
+			$slug_arr = array();
+			foreach($paths as $path){
+				if (array_key_exists($path, $categories))
+				{
+					$slug_arr []= $categories[$path]->slug;
 				}
 			}
-			 
-        	return rtrim($category_slug, '/');
+			if (!empty($slug_arr))
+			{
+				$slug_arr = array_reverse($slug_arr);
+			}
+
+			$slug_string = implode('/', $slug_arr);
+			
+        	return $slug_string;
 		}
 
 
