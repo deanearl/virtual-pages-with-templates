@@ -32,6 +32,8 @@ if (!class_exists('VirtualPagesTemplates'))
 
         private $blog_path = '/';
 
+        private $categories = array();
+
         const ERR_URL = 1;
         const ERR_TEMPLATE = 2;
         const ERR_CATEGORY = 3;
