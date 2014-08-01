@@ -726,6 +726,28 @@ if (!class_exists('VirtualPagesTemplates'))
 				$this->categories = get_the_category($this->template->ID);
 
 	            // can't get anything, directly read the URL
+				
+	            	$got_custom = FALSE;
+	            if (isset($wp_query->query['category_name']))
+	            {
+	            	$slug = $this->get_category_slug($wp_query->query['category_name']);
+	            	if ($slug)
+	            	{
+	            		$this->category_slug = $slug;
+	            		$got_custom = TRUE;
+	            	}
+	            }
+	            
+	            if (isset($wp_query->query['name']) && !$got_custom)
+	            {
+	            	$slug = $this->get_category_slug($wp_query->query['name']);
+	            	if ($slug)
+	            	{
+	            		$this->category_slug = $slug;
+	            		$got_custom = TRUE;
+	            	}
+	            }
+
 	            if (!$got_custom )
 	            {	
 	            	$slug = $this->get_category_slug(rtrim($_SERVER['REQUEST_URI'], '/'));
@@ -814,10 +836,14 @@ if (!class_exists('VirtualPagesTemplates'))
 			if (!empty($slug_arr))
 			{
 				$slug_arr = array_reverse($slug_arr);
+				$slug_string = implode('/', $slug_arr);
+			}
+			else
+			{
+				if (!empty($categories))
+					$slug_string = current($categories)->slug;
 			}
 
-			$slug_string = implode('/', $slug_arr);
-			
         	return $slug_string;
 		}
 
