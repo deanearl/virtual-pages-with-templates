@@ -725,38 +725,14 @@ if (!class_exists('VirtualPagesTemplates'))
 
 				$this->categories = get_the_category($this->template->ID);
 
-	            // can't get anything, directly read the URL
-				
-	            	$got_custom = FALSE;
-	            if (isset($wp_query->query['category_name']))
-	            {
-	            	$slug = $this->get_category_slug($wp_query->query['category_name']);
-	            	if ($slug)
-	            	{
-	            		$this->category_slug = $slug;
-	            		$got_custom = TRUE;
-	            	}
-	            }
+	        
+            	$slug = $this->get_category_slug(rtrim($_SERVER['REQUEST_URI'], '/'));
+            	if ($slug)
+            	{
+            		$this->category_slug = $slug;
+            		$got_custom = TRUE;
+            	}
 	            
-	            if (isset($wp_query->query['name']) && !$got_custom)
-	            {
-	            	$slug = $this->get_category_slug($wp_query->query['name']);
-	            	if ($slug)
-	            	{
-	            		$this->category_slug = $slug;
-	            		$got_custom = TRUE;
-	            	}
-	            }
-
-	            if (!$got_custom )
-	            {	
-	            	$slug = $this->get_category_slug(rtrim($_SERVER['REQUEST_URI'], '/'));
-	            	if ($slug)
-	            	{
-	            		$this->category_slug = $slug;
-	            		$got_custom = TRUE;
-	            	}
-	            }
 	            
 			}
 
@@ -811,7 +787,7 @@ if (!class_exists('VirtualPagesTemplates'))
 		* @param string $category_slug 
 		* @return string $category_slug
 		*/
-		public function get_category_slug($path = NULL,  &$category_slug = NULL)
+		public function get_category_slug($path = NULL)
 		{
 			$slug_string = NULL;
 			// explode the path and check vs all categories

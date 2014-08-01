@@ -189,6 +189,7 @@ class WP_Test_Vpt extends WP_UnitTestCase
 		$this->vpt->category_slug = $this->test_vpt_category_slug;
 
 		$this->vpt->template = get_post($id);
+		$this->vpt->categories = get_the_category($this->vpt->template->ID);
 		$this->vpt->get_category_slug($this->test_vpt_category_slug);
 
  		$virtualpageurl = '/%category%/%postname%/';
@@ -603,12 +604,13 @@ class WP_Test_Vpt extends WP_UnitTestCase
  		$category1_child_child = $this->factory->category->create_and_get(array('slug' => $this->test_vpt_category_slug.'-child-child', 'name' => 'some category child child', 'parent' => $category1_child->term_id));
  		
  		$this->vpt->template = get_post($id);
- 		wp_set_post_categories( $id, array($category->term_id, $category2->term_id, $category1_child->term_id, $category1_child_child->term_id) ) ;
 
+ 		wp_set_post_categories( $id, array($category->term_id, $category2->term_id, $category1_child->term_id, $category1_child_child->term_id) ) ;
+ 		$this->vpt->categories = get_the_category($this->vpt->template->ID);
 	 	$this->assertEquals($this->test_vpt_category_slug, $this->vpt->get_category_slug($this->test_vpt_category_slug));
 	 	$this->assertEquals($this->test_vpt_category_slug.'2', $this->vpt->get_category_slug($this->test_vpt_category_slug.'2'));
-	 	$this->assertEquals($this->test_vpt_category_slug.'/'.$this->test_vpt_category_slug.'-child', $this->vpt->get_category_slug($this->test_vpt_category_slug.'-child'));
-	 	$this->assertEquals($this->test_vpt_category_slug.'/'.$this->test_vpt_category_slug.'-child'.'/'.$this->test_vpt_category_slug.'-child-child', $this->vpt->get_category_slug($this->test_vpt_category_slug.'-child-child'));
+	 	$this->assertEquals($this->test_vpt_category_slug.'/'.$this->test_vpt_category_slug.'-child', $this->vpt->get_category_slug($this->test_vpt_category_slug.'/'.$this->test_vpt_category_slug.'-child'));
+	 	$this->assertEquals($this->test_vpt_category_slug.'/'.$this->test_vpt_category_slug.'-child'.'/'.$this->test_vpt_category_slug.'-child-child', $this->vpt->get_category_slug($this->test_vpt_category_slug.'/'.$this->test_vpt_category_slug.'-child'.'/'.$this->test_vpt_category_slug.'-child-child'));
  	}
 
  	/**
