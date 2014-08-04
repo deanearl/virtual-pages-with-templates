@@ -584,7 +584,7 @@ if (!class_exists('VirtualPagesTemplates'))
             $num_posts = count($wp_query->posts);
             $allow_virtual = FALSE;
             //empty($wp_rewrite->permalink_structure) && 
-            if (empty($wp->query_vars) && !isset($wp_query->post))
+            if (empty($wp->query_vars) && !isset($wp_query->post) && ($current_url_trimmed != '' && empty($posts)) )
             {	
 				$allow_virtual = TRUE;
             }
