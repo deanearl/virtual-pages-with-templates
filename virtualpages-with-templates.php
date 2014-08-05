@@ -34,6 +34,8 @@ if (!class_exists('VirtualPagesTemplates'))
 
         public $categories = array();
 
+        public $always_search_virtual = TRUE; # option to search virtual page first
+
         const ERR_URL = 1;
         const ERR_TEMPLATE = 2;
         const ERR_CATEGORY = 3;
@@ -346,7 +348,7 @@ if (!class_exists('VirtualPagesTemplates'))
 
 		        if (!empty($this->options) && isset($this->options['affect_search']) && $this->options['affect_search'] && (!is_null($this->template) && $this->template->ID))
 		        {
-		        	if ((isset($wp_query->posts) && count($wp_query->posts) == 0)  || !is_null($this->is_virtual_page()) && $wp_query->post->ID == $this->template->ID)
+		        	if ((isset($wp_query->posts) && count($wp_query->posts) == 0)  || !is_null($this->is_virtual_page()) && $wp_query->post->ID == $this->template->ID || $this->always_search_virtual)
 		        	{
 		        		$structure = $this->permalink_structure;
 			        	if ($this->use_custom_permalink){
@@ -449,6 +451,7 @@ if (!class_exists('VirtualPagesTemplates'))
 				$_POST['use_custom_permalink_structure'] = isset($_POST['use_custom_permalink_structure']) ? $_POST['use_custom_permalink_structure'] : '0';
 				$_POST['affect_search'] = isset($_POST['affect_search']) ? $_POST['affect_search'] : '0';
 				$_POST['hide_post_id'] = isset($_POST['hide_post_id']) ? $_POST['hide_post_id'] : '0';
+				$_POST['always_virtual'] = isset($_POST['always_virtual']) ? $_POST['always_virtual'] : '0';
 				update_option('vpt_options', $_POST);
 					$extra = '&settings-updated=true';
 				}
@@ -558,6 +561,10 @@ if (!class_exists('VirtualPagesTemplates'))
             if (!isset($this->options['hide_post_id']))
             	$this->options['hide_post_id'] = 0;
             $this->hide_post_id = (BOOL) $this->options['hide_post_id'];
+
+            if (!isset($this->options['always_virtual']))
+            	$this->options['always_virtual'] = 0;
+            $this->always_search_virtual = (BOOL) $this->options['always_virtual'];
 
             if (!$this->use_custom_permalink){
 				$virtualpageurl = $this->permalink_structure;
