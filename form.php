@@ -8,6 +8,7 @@
     $use_custom_permalink_structure = FALSE;
     $affect_search = TRUE;
     $hide_post_id = FALSE;
+    $always_virtual = FALSE;
 
     if (!empty($options)){
         $virtualpageurl = $options['virtualpageurl'];
@@ -16,6 +17,7 @@
         $affect_search = $options['affect_search'];
 
         $hide_post_id = (isset($options['hide_post_id']) ? $options['hide_post_id'] : FALSE);
+        $always_virtual = (isset($options['always_virtual']) ? $options['always_virtual'] : FALSE);
     }
 
     $posts = new WP_Query( array( 'post_status' => array('draft'), 'post_type' => array('post') ) );
@@ -113,6 +115,15 @@
                 <?php if ($hide_post_id) $checked = 'checked="checked"'; else $checked = '';?>
                <label for="hide_post_id"><input type="checkbox" value="1" id="hide_post_id" <?php echo $checked;?> name="hide_post_id"></label>
                <p class="description">Hides the post/page id from the virtual page</p>
+            </td>
+            </tr>
+
+            <tr valign="top">
+            <th scope="row"><?php _e('Always Search Virtual Pages' ); ?></th>
+            <td>
+                <?php if ($always_virtual) $checked = 'checked="checked"'; else $checked = '';?>
+               <label for="always_virtual"><input type="checkbox" value="1" id="always_virtual" <?php echo $checked;?> name="always_virtual"></label>
+               <p class="description">Always search for virtual pages instead of searching WP posts and pages. This requires "Affect search result" to switched on.</p>
             </td>
             </tr>
             </tbody>
