@@ -594,7 +594,7 @@ if (!class_exists('VirtualPagesTemplates'))
             
             if (!is_home())
             {
-            	if (empty($wp->query_vars) && !isset($wp_query->post) && $current_url_trimmed != ''  )
+            	if (empty($wp->query_vars) && !isset($wp_query->post) && ($current_url_trimmed != '' && empty($posts))  )
 	            {	
 					$allow_virtual = TRUE;
 	            }
