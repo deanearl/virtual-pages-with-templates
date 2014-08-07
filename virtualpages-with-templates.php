@@ -591,13 +591,17 @@ if (!class_exists('VirtualPagesTemplates'))
             $num_posts = count($wp_query->posts);
             $allow_virtual = FALSE;
             //empty($wp_rewrite->permalink_structure) && 
-            if (empty($wp->query_vars) && !isset($wp_query->post) && ($current_url_trimmed != '' && empty($posts)) )
-            {	
-				$allow_virtual = TRUE;
-            }
-            elseif ($num_posts == 0)
+            
+            if (!is_home())
             {
-            	$allow_virtual = TRUE;
+            	if (empty($wp->query_vars) && !isset($wp_query->post) && $current_url_trimmed != ''  )
+	            {	
+					$allow_virtual = TRUE;
+	            }
+	            elseif ($num_posts == 0)
+	            {
+	            	$allow_virtual = TRUE;
+	            }	
             }
             
             if ($virtual_url == $current_url_trimmed && ($allow_virtual || (isset($wp_query->query['error']) && $wp_query->query['error'] == '404')) ) 
