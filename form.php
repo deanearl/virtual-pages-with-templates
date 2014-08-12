@@ -4,6 +4,7 @@
     <?php 
     $options = get_option('vpt_options');
     $virtualpageurl = '/shop/%postname%';
+    $vpt_default_keyword = 'Ipad 3 Mini';
     $page_template = null;
     $use_custom_permalink_structure = FALSE;
     $affect_search = TRUE;
@@ -12,6 +13,7 @@
 
     if (!empty($options)){
         $virtualpageurl = $options['virtualpageurl'];
+        $vpt_default_keyword = $options['vpt_keyword'];
         $page_template = $options['page_template'];
         $use_custom_permalink_structure = $options['use_custom_permalink_structure'];
         $affect_search = $options['affect_search'];
@@ -99,7 +101,13 @@
                 <p class="description">Specify an existing post or page (one that isn’t published) that will be used as a template.</p>
                 </td>
             </tr>
-   
+            <tr valign="top">
+            <th scope="row"><label for="default_role"><?php _e('Default Keyword: ' ); ?></label></th>
+                <td>
+                <input type="text" class="regular-text code" value="<?php echo $vpt_default_keyword?>" id="virtualpageurl" name="vpt_keyword"/>
+                <p class="description">Set default keyword for virtual pages template</p>
+                </td>
+            </tr>
             <tr valign="top">
             <th scope="row"><?php _e('Affect search result ' ); ?></th>
             <td>
