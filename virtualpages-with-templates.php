@@ -218,6 +218,53 @@ if (!class_exists('VirtualPagesTemplates'))
 	  		}
 	  	}
 	  	/**
+		* fix_trailing_slash
+		* 
+		* adds / removes the trailing slash on virtual pages depending on to what is set on the virtual page custom permalink
+		* overrides the WP permalink settings, where automatically removes / adds trailing slashes depending on the WP permalink
+		*
+		* @access public 
+		* @param string $s the string url
+		* @return $s
+		*/
+	  	public function fix_trailing_slash($s=''){
+	  		
+	  		if ($this->is_virtual_page())
+	  		{	
+	  			if ($this->use_custom_permalink && !empty($this->options))
+	  			{
+	  				$revvurl = strrev($this->options['virtualpageurl']);
+	  				$rev_s = strrev($s);
+	  				if ($revvurl){
+	  					if ($revvurl{0} == '/' && $rev_s{0} != '/')
+		  				{
+		  					return $s . '/';		
+		  				}
+		  				// remove slash if the custom permalink doesn't have a trailing slash
+		  				elseif ($revvurl{0} != '/' && $rev_s{0} == '/')
+		  				{
+		  					return substr($s, 0, -1);
+		  				}
+		  				// use as it is
+		  				else
+		  				{
+		  					return $s;
+		  				}	
+	  				}
+	  				else{
+	  					return $s;
+	  				}
+	  				// add slash if the custom permalink has slash
+	  				
+	  			}else{
+	  				return $s;
+	  			}
+	  			
+	  		}else{
+	  			return $s;
+	  		}
+	  	}
+	  	/**
 		 * overrides the WP rel_canonical - use the correct canonical tags for virtual pages
 		 *
 		*/
@@ -531,9 +578,12 @@ if (!class_exists('VirtualPagesTemplates'))
             	$regex = str_replace('/', "\/", $regex);
 
             	$match = preg_match('/(?Ji)^' . $regex.'/', $current_url_trimmed, $matches);
-            	
-				if ($match && isset($matches['postname']))
+                
+            	if ($match && isset($matches['postname'])){
 					$this->keyword = $matches['postname'];
+                }else{
+                    $this->keyword = $this->options['vpt_keyword'];
+                }
 			}
               
 		}
@@ -591,13 +641,17 @@ if (!class_exists('VirtualPagesTemplates'))
             $num_posts = count($wp_query->posts);
             $allow_virtual = FALSE;
             //empty($wp_rewrite->permalink_structure) && 
-            if (empty($wp->query_vars) && !isset($wp_query->post) && ($current_url_trimmed != '' && empty($posts)) )
-            {	
-				$allow_virtual = TRUE;
-            }
-            elseif ($num_posts == 0)
+            
+            if (!is_home())
             {
-            	$allow_virtual = TRUE;
+            	if (empty($wp->query_vars) && !isset($wp_query->post) && ($current_url_trimmed != '' && empty($posts))  )
+	            {	
+					$allow_virtual = TRUE;
+	            }
+	            elseif ($num_posts == 0)
+	            {
+	            	$allow_virtual = TRUE;
+	            }	
             }
             
             if ($virtual_url == $current_url_trimmed && ($allow_virtual || (isset($wp_query->query['error']) && $wp_query->query['error'] == '404')) ) 
