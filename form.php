@@ -104,7 +104,7 @@
             <tr valign="top">
             <th scope="row"><label for="default_role"><?php _e('Default Keyword: ' ); ?></label></th>
                 <td>
-                <input type="text" class="regular-text code" value="<?php echo $vpt_default_keyword?>" id="virtualpageurl" name="vpt_keyword"/>
+                <input type="text" class="regular-text code" value="<?php echo $vpt_default_keyword?>" id="vpt_keyword" name="vpt_keyword"/>
                 <p class="description">Set default keyword for virtual pages template</p>
                 </td>
             </tr>
