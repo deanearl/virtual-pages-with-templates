@@ -535,7 +535,8 @@ if (!class_exists('VirtualPagesTemplates'))
             	if ($match && isset($matches['postname'])){
 					$this->keyword = $matches['postname'];
                 }else{
-                    $this->keyword = $this->options['vpt_keyword'];
+                	if (isset($this->options['vpt_keyword']))
+                    	$this->keyword = $this->options['vpt_keyword'];
                 }
 			}
               
