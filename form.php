@@ -4,7 +4,7 @@
     <?php 
     $options = get_option('vpt_options');
     $virtualpageurl = '/shop/%postname%';
-    $vpt_default_keyword = 'Ipad 3 Mini';
+    $vpt_default_keyword = '';
     $page_template = null;
     $use_custom_permalink_structure = FALSE;
     $affect_search = TRUE;
