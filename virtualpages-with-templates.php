@@ -3,7 +3,7 @@
 Plugin Name: Link7 Virtual Pages with Templates
 Plugin URI: https://github.com/Link7/virtual-pages-with-templates
 Description: A plugin to display virtual pages with support for shortcodes
-Version: 0.8.0
+Version: 0.8.1
 Author: Link7
 Author URI: https://github.com/Link7
 License: GPL3
