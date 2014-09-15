@@ -49,6 +49,7 @@ if (!class_exists('VirtualPagesTemplates'))
 
 				remove_action('wp_head', 'rel_canonical');
 				add_action('wp_head', array($this, 'vpt_rel_canonical'),10);
+				add_action( 'init', array($this, 'remove_genesis_canonical'), 10 );
 
 				remove_action( 'wp_head', 'wp_shortlink_wp_head', 10, 0 ); // Remove WordPress shortlink on wp_head hook
 				add_action('wp_head', array($this, 'vpt_shortlink_wp_head'), 10, 0); // custom shortlink
@@ -77,6 +78,11 @@ if (!class_exists('VirtualPagesTemplates'))
 			
 			$this->permalink_structure = get_option('permalink_structure');
 	  	}
+
+	  	public function remove_genesis_canonical()
+        {
+             remove_action( 'wp_head', 'genesis_canonical', 5 );
+        }
 
 	  	function vpt_metabox() {
 			add_meta_box( 'vpt-menu-metabox', 'Virtual Pages', array($this, 'vpt_render_menu_metabox'), 'nav-menus', 'side', 'high', $custom_param );
