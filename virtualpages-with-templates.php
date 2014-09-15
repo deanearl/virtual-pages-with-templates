@@ -49,7 +49,6 @@ if (!class_exists('VirtualPagesTemplates'))
 
 				remove_action('wp_head', 'rel_canonical');
 				add_action('wp_head', array($this, 'vpt_rel_canonical'),10);
-				add_action( 'init', array($this, 'remove_genesis_canonical'), 10 );
 
 				remove_action( 'wp_head', 'wp_shortlink_wp_head', 10, 0 ); // Remove WordPress shortlink on wp_head hook
 				add_action('wp_head', array($this, 'vpt_shortlink_wp_head'), 10, 0); // custom shortlink
@@ -78,11 +77,6 @@ if (!class_exists('VirtualPagesTemplates'))
 			
 			$this->permalink_structure = get_option('permalink_structure');
 	  	}
-
-	  	public function remove_genesis_canonical()
-        {
-             remove_action( 'wp_head', 'genesis_canonical', 5 );
-        }
 
 	  	function vpt_metabox() {
 			add_meta_box( 'vpt-menu-metabox', 'Virtual Pages', array($this, 'vpt_render_menu_metabox'), 'nav-menus', 'side', 'high', $custom_param );
@@ -229,6 +223,7 @@ if (!class_exists('VirtualPagesTemplates'))
 		*/
 	  	public function vpt_rel_canonical()
 	  	{
+
 	  		if ( !is_singular() )
 				return;
 
@@ -236,7 +231,7 @@ if (!class_exists('VirtualPagesTemplates'))
 			if ( !$id = $wp_the_query->get_queried_object_id() )
 				return;
 
-
+			$display_canonical = TRUE;
 			if ($this->is_virtual_page() && $id == $this->template->ID)
 			{
 				global $wp_rewrite;
@@ -262,12 +257,20 @@ if (!class_exists('VirtualPagesTemplates'))
 			
 				//$link = user_trailingslashit($link, $GLOBALS['post']->post_type);
 			}else
-				$link = get_permalink( $id );
+			{
+				// do genesis canonical if using genesis
+				if (function_exists('genesis'))
+					$display_canonical = FALSE;
+				else // do wp canonical
+					$link = get_permalink( $id );
+			}
+				
 
 			if ( $page = get_query_var('cpage') )
 				$link = get_comments_pagenum_link( $page );
 
-			echo "<link rel='canonical' href='{$link}' />\n";
+			if ($display_canonical)
+				echo "<link rel='canonical' href='{$link}' />\n";
 	  	}
 
 	  	/**
@@ -615,6 +618,8 @@ if (!class_exists('VirtualPagesTemplates'))
             	if (!is_null($this->template))
             	{ 
             		$this->set_is_virtual_page( TRUE );
+
+            		remove_action( 'wp_head', 'genesis_canonical', 5 );
 
 	            	$this->keyword = str_replace('-', ' ', $this->keyword);
 	            	$post = $this->template;
