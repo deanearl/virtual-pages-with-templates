@@ -620,6 +620,10 @@ if (!class_exists('VirtualPagesTemplates'))
             		$this->set_is_virtual_page( TRUE );
 
             		remove_action( 'wp_head', 'genesis_canonical', 5 );
+            		
+            		if(defined('WPSEO_VERSION') || has_action('wpseo_head')) {
+            			add_filter( 'wpseo_canonical', '__return_false' );
+            		}
 
 	            	$this->keyword = str_replace('-', ' ', $this->keyword);
 	            	$post = $this->template;
