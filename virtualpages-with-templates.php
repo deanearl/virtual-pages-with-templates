@@ -261,6 +261,8 @@ if (!class_exists('VirtualPagesTemplates'))
 				// do genesis canonical if using genesis
 				if (function_exists('genesis'))
 					$display_canonical = FALSE;
+				if(defined('WPSEO_VERSION') || has_action('wpseo_head')) 
+            		$display_canonical = FALSE;
 				else // do wp canonical
 					$link = get_permalink( $id );
 			}
